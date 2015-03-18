@@ -3,7 +3,33 @@ module SAC
 
 import DSP
 
-export SACtr, fft, rmean!, rtrend!, time, bandpass!, highpass!, write
+export SACtr,
+	bandpass!,
+	copy,
+	fft,
+	highpass!,
+	lowpass!,
+	rmean!,
+	rotate_through!,
+	rtrend!,
+	time,
+	write
+
+
+# SAC types
+const SACFloat = Float32
+const SACChar = ASCIIString
+const SACInt = Int32
+const SACBool = Bool
+# Constructors
+sacfloat = float32
+sacint = int32
+sacchar = ascii
+sacbool = bool
+# Length of SAC character headers (except kevnm, which is twice the length)
+const saccharlen = 8
+# Convert a number into a SACChar
+sacstring(x, maxlen=saccharlen) = sacchar(string(x)[1:minimum((length(string(x)),maxlen))]*" "^(maximum((0,maxlen-length(string(x))))))
 
 # SAC unset values
 const sac_rnull = -12345.
@@ -21,144 +47,144 @@ const sac_force_swap = true
 type SACtr
 	# Header, floating point.  These are Float32, but we use
 	# FloatingPoint internally for ease of use.
-	delta::Float32
-	depmin::Float32
-	depmax::Float32
-	scale::Float32
-	odelta::Float32
-	b::Float32
-	e::Float32
-	o::Float32
-	a::Float32
-	internal0::Float32
-	t0::Float32
-	t1::Float32
-	t2::Float32
-	t3::Float32
-	t4::Float32
-	t5::Float32
-	t6::Float32
-	t7::Float32
-	t8::Float32
-	t9::Float32
-	f::Float32
-	resp0::Float32
-	resp1::Float32
-	resp2::Float32
-	resp3::Float32
-	resp4::Float32
-	resp5::Float32
-	resp6::Float32
-	resp7::Float32
-	resp8::Float32
-	resp9::Float32
-	stla::Float32
-	stlo::Float32
-	stel::Float32
-	stdp::Float32
-	evla::Float32
-	evlo::Float32
-	evel::Float32
-	evdp::Float32
-	mag::Float32
-	user0::Float32
-	user1::Float32
-	user2::Float32
-	user3::Float32
-	user4::Float32
-	user5::Float32
-	user6::Float32
-	user7::Float32
-	user8::Float32
-	user9::Float32
-	dist::Float32
-	az::Float32
-	baz::Float32
-	gcarc::Float32
-	internal1::Float32
-	internal2::Float32
-	depmen::Float32
-	cmpaz::Float32
-	cmpinc::Float32
-	xminimum::Float32
-	xmaximum::Float32
-	yminimum::Float32
-	ymaximum::Float32
-	unused1::Float32
-	unused2::Float32
-	unused3::Float32
-	unused4::Float32
-	unused5::Float32
-	unused6::Float32
-	unused7::Float32
+	delta::SACFloat
+	depmin::SACFloat
+	depmax::SACFloat
+	scale::SACFloat
+	odelta::SACFloat
+	b::SACFloat
+	e::SACFloat
+	o::SACFloat
+	a::SACFloat
+	internal0::SACFloat
+	t0::SACFloat
+	t1::SACFloat
+	t2::SACFloat
+	t3::SACFloat
+	t4::SACFloat
+	t5::SACFloat
+	t6::SACFloat
+	t7::SACFloat
+	t8::SACFloat
+	t9::SACFloat
+	f::SACFloat
+	resp0::SACFloat
+	resp1::SACFloat
+	resp2::SACFloat
+	resp3::SACFloat
+	resp4::SACFloat
+	resp5::SACFloat
+	resp6::SACFloat
+	resp7::SACFloat
+	resp8::SACFloat
+	resp9::SACFloat
+	stla::SACFloat
+	stlo::SACFloat
+	stel::SACFloat
+	stdp::SACFloat
+	evla::SACFloat
+	evlo::SACFloat
+	evel::SACFloat
+	evdp::SACFloat
+	mag::SACFloat
+	user0::SACFloat
+	user1::SACFloat
+	user2::SACFloat
+	user3::SACFloat
+	user4::SACFloat
+	user5::SACFloat
+	user6::SACFloat
+	user7::SACFloat
+	user8::SACFloat
+	user9::SACFloat
+	dist::SACFloat
+	az::SACFloat
+	baz::SACFloat
+	gcarc::SACFloat
+	internal1::SACFloat
+	internal2::SACFloat
+	depmen::SACFloat
+	cmpaz::SACFloat
+	cmpinc::SACFloat
+	xminimum::SACFloat
+	xmaximum::SACFloat
+	yminimum::SACFloat
+	ymaximum::SACFloat
+	unused1::SACFloat
+	unused2::SACFloat
+	unused3::SACFloat
+	unused4::SACFloat
+	unused5::SACFloat
+	unused6::SACFloat
+	unused7::SACFloat
 	# Integer parts.  These are Int32; again, we use Integer
-    nzyear::Int32
-	nzjday::Int32
-	nzhour::Int32
-	nzmin::Int32
-	nzsec::Int32
-	nzmsec::Int32
-	nvhdr::Int32
-	norid::Int32
-	nevid::Int32
-	npts::Int32
-	internal3::Int32
-	nwfid::Int32
-	nxsize::Int32
-	nysize::Int32
-	unused8::Int32
-	iftype::Int32
-	idep::Int32
-	iztype::Int32
-	unused9::Int32
-	iinst::Int32
-	istreg::Int32
-	ievreg::Int32
-	ievtyp::Int32
-	iqual::Int32
-	isynth::Int32
-	imagtyp::Int32
-	imagsrc::Int32
-	unused10::Int32
-	unused11::Int32
-	unused12::Int32
-	unused13::Int32
-	unused14::Int32
-	unused15::Int32
-	unused16::Int32
-	unused17::Int32
+    nzyear::SACInt
+	nzjday::SACInt
+	nzhour::SACInt
+	nzmin::SACInt
+	nzsec::SACInt
+	nzmsec::SACInt
+	nvhdr::SACInt
+	norid::SACInt
+	nevid::SACInt
+	npts::SACInt
+	internal3::SACInt
+	nwfid::SACInt
+	nxsize::SACInt
+	nysize::SACInt
+	unused8::SACInt
+	iftype::SACInt
+	idep::SACInt
+	iztype::SACInt
+	unused9::SACInt
+	iinst::SACInt
+	istreg::SACInt
+	ievreg::SACInt
+	ievtyp::SACInt
+	iqual::SACInt
+	isynth::SACInt
+	imagtyp::SACInt
+	imagsrc::SACInt
+	unused10::SACInt
+	unused11::SACInt
+	unused12::SACInt
+	unused13::SACInt
+	unused14::SACInt
+	unused15::SACInt
+	unused16::SACInt
+	unused17::SACInt
 	# Logical part: boolean
-	leven::Bool
-	lpspol::Bool
-	lovrok::Bool
-	lcalda::Bool
-	unused18::Bool
+	leven::SACBool
+	lpspol::SACBool
+	lovrok::SACBool
+	lcalda::SACBool
+	unused18::SACBool
 	# Character parts
-	kstnm::ASCIIString
-	kevnm::ASCIIString
-	khole::ASCIIString
-	ko::ASCIIString
-	ka::ASCIIString
-	kt0::ASCIIString
-	kt1::ASCIIString
-	kt2::ASCIIString
-	kt3::ASCIIString
-	kt4::ASCIIString
-	kt5::ASCIIString
-	kt6::ASCIIString
-	kt7::ASCIIString
-	kt8::ASCIIString
-	kt9::ASCIIString
-	kf::ASCIIString
-	kuser0::ASCIIString
-	kuser1::ASCIIString
-	kuser2::ASCIIString
-	kcmpnm::ASCIIString
-	knetwk::ASCIIString
-	kdatrd::ASCIIString
-	kinst::ASCIIString
+	kstnm::SACChar
+	kevnm::SACChar
+	khole::SACChar
+	ko::SACChar
+	ka::SACChar
+	kt0::SACChar
+	kt1::SACChar
+	kt2::SACChar
+	kt3::SACChar
+	kt4::SACChar
+	kt5::SACChar
+	kt6::SACChar
+	kt7::SACChar
+	kt8::SACChar
+	kt9::SACChar
+	kf::SACChar
+	kuser0::SACChar
+	kuser1::SACChar
+	kuser2::SACChar
+	kcmpnm::SACChar
+	knetwk::SACChar
+	kdatrd::SACChar
+	kinst::SACChar
 	# The time series
-	t::Array{Float32,1}
+	t::Array{SACFloat,1}
 end
 
 function SACtr(delta, npts)
@@ -180,7 +206,7 @@ function SACtr(delta, npts)
 	lcalda = true
 	unused18 = false
 	# Other variables are by default undefined
-	scale = odelta = o = a = internal0 = 
+	scale = odelta = o = a = internal0 =
 	        t0 = t1 = t2 = t3 = t4 = t5 = t6 = t7 = t8 = t9 = f =
 	        resp0 = resp1 = resp2 = resp3 = resp4 = resp5 = resp6 = resp7 = resp8 = resp9 =
 	        stla = stlo = stel = stdp = evla = evlo = evel = evdp = mag =
@@ -199,8 +225,8 @@ function SACtr(delta, npts)
 			kt8 = kt9 = kf = kuser0 = kuser1 = kuser2 = kcmpnm = knetwk = kdatrd = kinst =
 		sac_cnull
 
-	
-	return SACtr(delta, depmin, depmax, scale, odelta, b, e, o, a, internal0, 
+
+	return SACtr(delta, depmin, depmax, scale, odelta, b, e, o, a, internal0,
         t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, f,
 		resp0, resp1, resp2, resp3, resp4, resp5, resp6, resp7, resp8, resp9,
 		stla, stlo, stel, stdp, evla, evlo, evel, evdp, mag,
@@ -402,8 +428,8 @@ function read(file; byteswap="auto")
 		j = int(633 + (i-1)*len)
 		t[i] = swap(reinterpret(Float32, data[j:j+len-1])[1])
 	end
-	
-	return SACtr(delta, depmin, depmax, scale, odelta, b, e, o, a, internal0, 
+
+	return SACtr(delta, depmin, depmax, scale, odelta, b, e, o, a, internal0,
         t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, f,
 		resp0, resp1, resp2, resp3, resp4, resp5, resp6, resp7, resp8, resp9,
 		stla, stlo, stel, stdp, evla, evlo, evel, evdp, mag,
@@ -435,6 +461,9 @@ function write(s::SACtr, file::ASCIIString, byteswap=sac_force_swap)
 	else
 		w(F::IOStream, x) = Base.write(F, x)
 	end
+	# Define routine to shorten/pad character headers
+	w(F::IOStream, x::ASCIIString, maxlen::Integer) =
+		Base.write(F, x[1:minimum((length(x),maxlen))]*" "^(maximum((0,maxlen-length(x)))))
 	# Write header
 	w(f, s.delta)
 	w(f, s.depmin)
@@ -546,38 +575,60 @@ function write(s::SACtr, file::ASCIIString, byteswap=sac_force_swap)
 	w(f, int32(s.lovrok))
 	w(f, int32(s.lcalda))
 	w(f, int32(s.unused18))
-	# No byte-swapping needed for characters
-	Base.write(f, s.kstnm)
-	Base.write(f, s.kevnm)
-	Base.write(f, s.khole)
-	Base.write(f, s.ko)
-	Base.write(f, s.ka)
-	Base.write(f, s.kt0)
-	Base.write(f, s.kt1)
-	Base.write(f, s.kt2)
-	Base.write(f, s.kt3)
-	Base.write(f, s.kt4)
-	Base.write(f, s.kt5)
-	Base.write(f, s.kt6)
-	Base.write(f, s.kt7)
-	Base.write(f, s.kt8)
-	Base.write(f, s.kt9)
-	Base.write(f, s.kf)
-	Base.write(f, s.kuser0)
-	Base.write(f, s.kuser1)
-	Base.write(f, s.kuser2)
-	Base.write(f, s.kcmpnm)
-	Base.write(f, s.knetwk)
-	Base.write(f, s.kdatrd)
-	Base.write(f, s.kinst)
+	# No byte-swapping needed for characters, but pad them to the correct length
+	w(f, s.kstnm, saccharlen)
+	w(f, s.kevnm, 2*saccharlen)
+	w(f, s.khole, saccharlen)
+	w(f, s.ko, saccharlen)
+	w(f, s.ka, saccharlen)
+	w(f, s.kt0, saccharlen)
+	w(f, s.kt1, saccharlen)
+	w(f, s.kt2, saccharlen)
+	w(f, s.kt3, saccharlen)
+	w(f, s.kt4, saccharlen)
+	w(f, s.kt5, saccharlen)
+	w(f, s.kt6, saccharlen)
+	w(f, s.kt7, saccharlen)
+	w(f, s.kt8, saccharlen)
+	w(f, s.kt9, saccharlen)
+	w(f, s.kf, saccharlen)
+	w(f, s.kuser0, saccharlen)
+	w(f, s.kuser1, saccharlen)
+	w(f, s.kuser2, saccharlen)
+	w(f, s.kcmpnm, saccharlen)
+	w(f, s.knetwk, saccharlen)
+	w(f, s.kdatrd, saccharlen)
+	w(f, s.kinst, saccharlen)
 	# Trace
 	for i = 1:s.npts
 		w(f, s.t[i])
 	end
 	close(f)
-end	
+end
+
+function copy(s::SACtr)
+	# Return a copy of a SAC trace
+	return SACtr(s.delta, s.depmin, s.depmax, s.scale, s.odelta, s.b, s.e, s.o, s.a, s.internal0,
+		s.t0, s.t1, s.t2, s.t3, s.t4, s.t5, s.t6, s.t7, s.t8, s.t9, s.f,
+		s.resp0, s.resp1, s.resp2, s.resp3, s.resp4, s.resp5, s.resp6, s.resp7, s.resp8, s.resp9,
+		s.stla, s.stlo, s.stel, s.stdp, s.evla, s.evlo, s.evel, s.evdp, s.mag,
+		s.user0, s.user1, s.user2, s.user3, s.user4, s.user5, s.user6, s.user7, s.user8, s.user9,
+		s.dist, s.az, s.baz, s.gcarc, s.internal1, s.internal2, s.depmen, s.cmpaz, s.cmpinc,
+		s.xminimum, s.xmaximum, s.yminimum, s.ymaximum,
+		s.unused1, s.unused2, s.unused3, s.unused4, s.unused5, s.unused6, s.unused7,
+		s.nzyear, s.nzjday, s.nzhour, s.nzmin, s.nzsec, s.nzmsec,
+		s.nvhdr, s.norid, s.nevid, s.npts, s.internal3, s.nwfid, s.nxsize, s.nysize, s.unused8,
+		s.iftype, s.idep, s.iztype, s.unused9, s.iinst, s.istreg, s.ievreg, s.ievtyp, s.iqual,
+		s.isynth, s.imagtyp, s.imagsrc, s.unused10, s.unused11, s.unused12, s.unused13,
+		s.unused14, s.unused15, s.unused16, s.unused17,
+		s.leven, s.lpspol, s.lovrok, s.lcalda, s.unused18,
+		s.kstnm, s.kevnm, s.khole, s.ko, s.ka, s.kt0, s.kt1, s.kt2, s.kt3, s.kt4, s.kt5, s.kt6, s.kt7,
+		s.kt8, s.kt9, s.kf, s.kuser0, s.kuser1, s.kuser2, s.kcmpnm, s.knetwk, s.kdatrd, s.kinst,
+		Base.copy(s.t))
+end
 
 function sample()
+	# Return some sample data, which is what you get when calling `fg seis' in SAC
 	file = dirname(@__FILE__()) * "/data/seis.sac"
 	return read(file)
 end
@@ -592,22 +643,32 @@ function fft(s::SACtr)
 end
 
 function rmean!(s::SACtr)
-	# Remove the mean
+	# Remove the mean in-place
 	s.t = s.t - mean(s.t)
 	update_headers!(s)
+	return
 end
 
 function rtrend!(s::SACtr)
-	# Remove the trend
+	# Remove the trend in-place
 	t = time(s)
 	x0, x1 = linreg(t, s.t)
 	s.t = s.t - (x0 + x1*t)
 	update_headers!(s)
+	return
 end
-	
+
+function update_headers!(s::SACtr)
+	# Update headers which are automatically calculated from the trace
+    s.depmax = maximum(s.t)
+	s.depmin = minimum(s.t)
+	s.depmen = mean(s.t)
+	return
+end
+
 function time(s::SACtr)
 	# Return an array containing the times for each sample
-	return [s.b:s.delta:s.e]
+	return [s.b:s.delta:s.e;]
 end
 
 function bandpass!(s::SACtr, c1::Number, c2::Number;
@@ -627,7 +688,7 @@ function bandpass!(s::SACtr, c1::Number, c2::Number;
 	#   npoles::Int       : Number of poles (1-10) [Default 2]
 	#	passes::Int       : Number of passes (1-2) [Default 1]
 
-	
+
 	# Check arguments
 	c1 >= c2 &&	error("SAC.bandpass: Upper corner must be larger than lower corner")
 	response = DSP.Bandpass(c1, c2; fs=1./s.delta)
@@ -635,26 +696,56 @@ function bandpass!(s::SACtr, c1::Number, c2::Number;
 	# Create apply the filter
 	f = DSP.digitalfilter(response, prototype)
 	apply_filter!(s, f, passes)
+	return
 end
 
 function highpass!(s::SACtr, c::Number;
 		ftype::ASCIIString="butterworth", npoles::Integer=sac_npoles,
 		passes::Integer=sac_passes)
-	# Perform a highpass on the trace.
+	# Perform a highpass on the trace, in-place.
 	response = DSP.Highpass(c; fs=1./s.delta)
 	prototype = get_filter_prototype(ftype, npoles)
 	f = DSP.digitalfilter(response, prototype)
 	apply_filter!(s, f, passes)
+	return
 end
 
 function lowpass!(s::SACtr, c::Number;
 		ftype::ASCIIString="butterworth", npoles::Integer=sac_npoles,
 		passes::Integer=sac_passes)
-	# Perform a lowpass on the trace.
+	# Perform a lowpass on the trace, in-place.
 	response = DSP.Lowpass(c; fs=1./s.delta)
 	prototype = get_filter_prototype(ftype, npoles)
 	f = DSP.digitalfilter(response, prototype)
 	apply_filter!(s, f, passes)
+	return
+end
+
+function rotate_through!(s1::SACtr, s2::SACtr, phi)
+	# Rotate two orthogonal horizontal traces clockwise by ('through') phi (degrees).
+	# This has the effect of changing the reference frame (passive rotation),
+	# and hence the particle motion appears to rotate anti-clockwise.
+    if mod(s2.cmpaz - s1.cmpaz, 180.) != 90.
+		error("SAC.rotate_through!: traces must be orthogonal")
+	elseif s1.npts != s2.npts
+		error("SAC.rotate_through!: traces must be same length")
+	elseif s1.delta != s2.delta
+		error("SAC.rotate_through!: traces must have same delta")
+	end
+	phir = deg2rad(phi)
+	R = [cos(phir) sin(phir);
+	    -sin(phir) cos(phir)]
+	for i = 1:s1.npts
+		r = R*[s1.t[i]; s2.t[i]]
+		s1.t[i], s2.t[i] = r[1], r[2]
+	end
+	update_headers!(s1)
+	s1.cmpaz = mod(s1.cmpaz + phi, 360.)
+	s1.kcmpnm = sacstring(s1.cmpaz)
+	update_headers!(s2)
+	s2.cmpaz = mod(s2.cmpaz + phi, 360.)
+	s2.kcmpnm = sacstring(s2.cmpaz)
+	return
 end
 
 function apply_filter!(s::SACtr, f::DSP.ZPKFilter{Complex{Float64},Complex{Float64},Float64},
@@ -667,6 +758,7 @@ function apply_filter!(s::SACtr, f::DSP.ZPKFilter{Complex{Float64},Complex{Float
 	else
 		error("SAC.apply_filter!: passes must be 1 or 2")
 	end
+	return
 end
 
 function get_filter_prototype(ftype::ASCIIString, npoles::Integer)
