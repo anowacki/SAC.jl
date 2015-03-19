@@ -6,6 +6,7 @@ import DSP
 export SACtr,
 	bandpass!,
 	copy,
+	cut!,
 	fft,
 	highpass!,
 	lowpass!,
@@ -13,6 +14,7 @@ export SACtr,
 	rotate_through!,
 	rtrend!,
 	time,
+	tshift!,
 	write
 
 
@@ -42,6 +44,9 @@ const sac_passes = 1
 
 # For SAC/BRIS, files are always big-endian, so set this to true to swap by default
 const sac_force_swap = true
+
+# Flag for verbosity
+sac_verbose = true
 
 # Composite type for SAC evenly-spaced time series data
 type SACtr
@@ -452,7 +457,7 @@ function read(file; byteswap="auto")
 		t)
 end
 
-function write(s::SACtr, file::ASCIIString, byteswap=sac_force_swap)
+function write(s::SACtr, file::ASCIIString; byteswap=sac_force_swap)
 	# Write a SAC composed type to file
 	# Call with byteswap=true to write non-native-endian files
 	f = open(file, "w")
@@ -633,6 +638,27 @@ function sample()
 	return read(file)
 end
 
+function cut!(s::SACtr, b::Number, e::Number)
+	# Cut a trace in memory.
+	if b < s.b
+		info("SAC.cut!: beginning cut is before start of trace.  Setting to $(s.b).")
+		b = s.b
+	end
+	b > s.e && error("SAC.cut!: end cut time is later than end of trace.")
+	if e > s.e
+		info("SAC.cut!: end cut is after end of trace.  Setting to $(s.e).")
+		e = s.e
+	end
+	e < s.b && error("SAC.cut!: end time is earlier than start of trace.")
+	ib = int((b - s.b)/s.delta) + 1
+	ie = s.npts - int((s.e - e)/s.delta)
+	s.t = s.t[ib:ie]
+	s.b, s.e = b, e
+	s.npts = ie - ib + 1
+	update_headers!(s)
+	return
+end
+
 function fft(s::SACtr)
 	# Return the fourier-transformed trace and the frequencies to go along with it
 	N = int(s.npts/2) + 1
@@ -736,8 +762,7 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
 	R = [cos(phir) sin(phir);
 	    -sin(phir) cos(phir)]
 	for i = 1:s1.npts
-		r = R*[s1.t[i]; s2.t[i]]
-		s1.t[i], s2.t[i] = r[1], r[2]
+		(s1.t[i], s2.t[i]) = R*[s1.t[i]; s2.t[i]]
 	end
 	update_headers!(s1)
 	s1.cmpaz = mod(s1.cmpaz + phi, 360.)
@@ -745,6 +770,21 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
 	update_headers!(s2)
 	s2.cmpaz = mod(s2.cmpaz + phi, 360.)
 	s2.kcmpnm = sacstring(s2.cmpaz)
+	return
+end
+
+function tshift!(s::SACtr, tshift::Number; wrap=true)
+	# Shift a trace backward in time by t seconds, wrapping around by default,
+	# or optionally zeroing the front/endmost samples if pad=false
+	n = int(tshift/s.delta)
+	if n == 0
+		sac_verbose && info("SAC.tshift!: t ($tshift) is less than delta ($(s.delta)) so no shift applied")
+		return
+	end
+	s.t = circshift(s.t, n)
+	if !wrap
+		n > 0 ? s.t[1:n] = 0. : s.t[end+n+1:end] = 0.
+	end
 	return
 end
 
