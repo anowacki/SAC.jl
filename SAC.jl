@@ -694,7 +694,7 @@ end
 
 function time(s::SACtr)
 	# Return an array containing the times for each sample
-	return [s.b:s.delta:s.e;]
+	return s.b + [0:s.npts-1;]*s.delta
 end
 
 function bandpass!(s::SACtr, c1::Number, c2::Number;
