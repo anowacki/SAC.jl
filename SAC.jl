@@ -2,6 +2,8 @@ module SAC
 # Contains routines for dealing with SAC-formatted files
 
 import DSP
+import Glob
+import Base.read, Base.write, Base.copy, Base.fft, Base.time
 
 export SACtr,
 	bandpass!,
