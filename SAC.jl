@@ -256,7 +256,15 @@ function SACtr(delta, npts)
 		t)
 end
 
-function read(file; byteswap="auto")
+@doc """
+read(file; byteswap=true, terse=false) -> s::SACtr
+
+   Read a SAC trace from \"file\".  If \"byteswap\" is true,
+   enforce swapping between native-endian and non-native-endian.
+   If \"terse\" is true, do not print warnings.
+   Returns a SACtr type \"s\".
+""" ->
+function read(file; byteswap="auto", terse::Bool=false)
 	# Read a binary SAC evenly-spaced time series file from disk.  Try to byteswap
 	# if possible; prevent with bswap="no", force with bswap="yes"
 	const len = 4
@@ -272,7 +280,7 @@ function read(file; byteswap="auto")
 				error("SAC.read: Header version '$nvhdr' for file '$file' " *
 				      "is out of date for big- and little-endianness.")
 			end
-			info("SAC.read: Auto-byteswapping file '$file'...")
+			!terse && info("SAC.read: Auto-byteswapping file '$file'...")
 		else
 			swap(x) = x
 		end
