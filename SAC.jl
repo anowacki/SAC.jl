@@ -4,13 +4,19 @@ module SAC
 import DSP
 import Glob
 import Base.read, Base.write, Base.copy, Base.fft, Base.time
+if VERSION < v"0.4"
+	import Docile.@doc
+end
 
 export SACtr,
 	bandpass!,
+	bp!,
 	copy,
 	cut!,
 	fft,
 	highpass!,
+	hp!,
+	lp!,
 	lowpass!,
 	rmean!,
 	rotate_through!,
@@ -687,7 +693,7 @@ end
 sample() -> ::SACtr
 
 Return some sample SAC data
-"""
+""" ->
 function sample()
 	# Return some sample data, which is what you get when calling `fg seis' in SAC
 	file = dirname(@__FILE__()) * "/data/seis.sac"
@@ -720,6 +726,13 @@ function cut!(s::SACtr, b::Number, e::Number)
 	return
 end
 
+# Array version of cut!
+function cut!(a::Array{SACtr}, b, e)
+	for s in a
+		SAC.cut!(s, b, e)
+	end
+end
+
 @doc """
 fft(s::SACtr) -> f, S
 
@@ -735,6 +748,16 @@ function fft(s::SACtr)
 	return f, S
 end
 
+function fft(a::Array{SACtr})
+	# Return arrays containing f and S for an array of SACtr objects
+	n = length(a)
+	f, S = Array(Array, n), Array(Array, n)
+	for i = 1:n
+		f[i], S[i] = fft(a[i])
+	end
+	return f, S
+end
+
 @doc """
 rmean!(::SACtr)
 
@@ -745,6 +768,12 @@ function rmean!(s::SACtr)
 	s.t = s.t - mean(s.t)
 	update_headers!(s)
 	return
+end
+
+function rmean!(a::Array{SACtr})
+	for s in a
+		rmean!(s)
+	end
 end
 
 @doc """
@@ -761,12 +790,24 @@ function rtrend!(s::SACtr)
 	return
 end
 
+function rtrend!(a::Array{SACtr})
+	for s in a
+		rtrend!(s)
+	end
+end
+
 function update_headers!(s::SACtr)
 	# Update headers which are automatically calculated from the trace
     s.depmax = maximum(s.t)
 	s.depmin = minimum(s.t)
 	s.depmen = mean(s.t)
 	return
+end
+
+function update_headers!(a::Array{SACtr})
+	for s in a
+		update_headers!(s)
+	end
 end
 
 @doc """
@@ -815,6 +856,15 @@ function bandpass!(s::SACtr, c1::Number, c2::Number;
 	return
 end
 
+function bandpass!(a::Array{SACtr}, c1, c2; ftype="butterworth", npoles=sac_npoles,
+		passes=sac_passes)
+	for s in a
+		bandpass!(s, c1, c2; ftype=ftype, npoles=npoles, passes=passes)
+	end
+end
+
+bp! = bandpass!
+
 @doc """
 highpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)
 
@@ -834,6 +884,15 @@ function highpass!(s::SACtr, c::Number;
 	return
 end
 
+function highpass!(a::Array{SACtr}, c;
+		ftype="butterworth", npoles=sac_npoles, passes=sac_passes)
+	for s in a
+		highpass!(s, c; ftype=ftype, npoles=npoles, passes=passes)
+	end
+end
+
+hp! = highpass!
+
 @doc """
 lowpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)
 
@@ -852,6 +911,15 @@ function lowpass!(s::SACtr, c::Number;
 	apply_filter!(s, f, passes)
 	return
 end
+
+function lowpass!(a::Array{SACtr}, c;
+		ftype="butterworth", npoles=sac_npoles, passes=sac_passes)
+	for s in a
+		lowpass!(s, c; ftype=ftype, npoles=npoles, passes=passes)
+	end
+end
+
+lp! = lowpass!
 
 @doc """
 rotate_through!(::SACtr, ::SACtr, phi)
@@ -888,7 +956,7 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
 end
 
 @doc """
-tshift(::SACtr, tshift; warp=true)
+tshift!(::SACtr, tshift; warp=true)
 
    Shift a SAC trace backward in time by \"t\" seconds.
 
@@ -911,8 +979,7 @@ function tshift!(s::SACtr, tshift::Number; wrap=true)
 	return
 end
 
-function apply_filter!(s::SACtr, f::DSP.ZPKFilter{Complex{Float64},Complex{Float64},Float64},
-		passes::Integer)
+function apply_filter!(s::SACtr, f, passes::Integer)
 		passes < 1 || passes > 2 && error("SAC.apply_filter!: Number of passes must be 1 or 2")
 	if passes == 1
 		DSP.filt!(s.t, f, s.t)
