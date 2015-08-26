@@ -955,6 +955,13 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
 	return
 end
 
+function rotate_through!(a::Array{SACtr}, phi)
+	length(a)%2 != 0 && error("SAC.rotate_through!: Array of traces must be a multiple of two long")
+	for i = 1:length(a)/2
+		rotate_through!(a[2*i - 1], a[2*i], phi)
+	end
+end
+
 @doc """
 tshift!(::SACtr, tshift; warp=true)
 
