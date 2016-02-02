@@ -717,8 +717,8 @@ function cut!(s::SACtr, b::Number, e::Number)
 		e = s.e
 	end
 	e < s.b && error("SAC.cut!: end time is earlier than start of trace.")
-	ib = int((b - s.b)/s.delta) + 1
-	ie = s.npts - int((s.e - e)/s.delta)
+	ib = round(Int, (b - s.b)/s.delta) + 1
+	ie = s.npts - round(Int, (s.e - e)/s.delta)
 	s.t = s.t[ib:ie]
 	s.b, s.e = b, e
 	s.npts = ie - ib + 1
@@ -741,7 +741,7 @@ fft(s::SACtr) -> f, S
 """ ->
 function fft(s::SACtr)
 	# Return the fourier-transformed trace and the frequencies to go along with it
-	N = int(s.npts/2) + 1
+	N = round(Int, s.npts/2) + 1
 	fmax = 1./(s.npts*s.delta)
 	f = [1:N]*fmax
 	S = Base.fft(s.t)[1:N]
@@ -974,7 +974,7 @@ tshift!(::SACtr, tshift; warp=true)
 function tshift!(s::SACtr, tshift::Number; wrap=true)
 	# Shift a trace backward in time by t seconds, wrapping around by default,
 	# or optionally zeroing the front/endmost samples if pad=false
-	n = int(tshift/s.delta)
+	n = round(Int, tshift/s.delta)
 	if n == 0
 		sac_verbose && info("SAC.tshift!: t ($tshift) is less than delta ($(s.delta)) so no shift applied")
 		return
