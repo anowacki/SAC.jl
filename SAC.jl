@@ -645,6 +645,14 @@ function write(s::SACtr, file::ASCIIString; byteswap=sac_force_swap)
 	close(f)
 end
 
+function write(s::Array{SACtr}, file::Array{ByteString}; byteswap=sac_force_swap)
+	length(s) == length(file) || error("SAC.write: Arrays must be same length")
+	for i = 1:length(s)
+		write(s[i], file[i])
+	end
+	return
+end
+
 @doc """
 `copy(s::SACtr) -> t::SACtr`
 
