@@ -479,6 +479,8 @@ function read(file; byteswap="auto", terse::Bool=false)
 		kt8, kt9, kf, kuser0, kuser1, kuser2, kcmpnm, knetwk, kdatrd, kinst,
 		# Trace
 		t)
+	update_headers!(s)
+	return s
 end
 
 @doc """
@@ -1016,6 +1018,7 @@ function apply_filter!(s::SACtr, f, passes::Integer)
 	else
 		error("SAC.apply_filter!: passes must be 1 or 2")
 	end
+	update_headers!(s)
 	return
 end
 
