@@ -20,6 +20,7 @@ export SACtr,
 	bp!,
 	copy,
 	cut!,
+	envelope!,
 	fft,
 	highpass!,
 	hp!,
@@ -992,6 +993,19 @@ function tshift!(s::SACtr, tshift::Number; wrap=true)
 	end
 	return
 end
+
+@doc """
+`envelope!(::SACtr)`
+
+Find the envelope of a SAC trace
+""" ->
+function envelope!(a::Array{SACtr})
+    for s in a
+		s.t = abs(DSP.hilbert(s.t))
+	end
+	return
+end
+envelope!(s::SACtr) = envelope!([s])
 
 function apply_filter!(s::SACtr, f, passes::Integer)
 		passes < 1 || passes > 2 && error("SAC.apply_filter!: Number of passes must be 1 or 2")
