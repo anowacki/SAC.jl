@@ -420,45 +420,45 @@ function read(file; byteswap="auto", terse::Bool=false)
 	unused15 = swap(reinterpret(Int32, data[i:i+len-1])[1]);  i+=len
 	unused16 = swap(reinterpret(Int32, data[i:i+len-1])[1]);  i+=len
 	unused17 = swap(reinterpret(Int32, data[i:i+len-1])[1]);  i+=len
-	leven = bool(swap(reinterpret(Int32, data[i:i+len-1])[1]));  i+=len
-	lpspol = bool(swap(reinterpret(Int32, data[i:i+len-1])[1]));  i+=len
-	lovrok = bool(swap(reinterpret(Int32, data[i:i+len-1])[1]));  i+=len
-	lcalda = bool(swap(reinterpret(Int32, data[i:i+len-1])[1]));  i+=len
-	unused18 = bool(swap(reinterpret(Int32, data[i:i+len-1])[1]));  i+=len
+	leven = 0 != swap(reinterpret(Int32, data[i:i+len-1])[1]);  i+=len
+	lpspol = 0 != swap(reinterpret(Int32, data[i:i+len-1])[1]);  i+=len
+	lovrok = 0 != swap(reinterpret(Int32, data[i:i+len-1])[1]);  i+=len
+	lcalda = 0 != swap(reinterpret(Int32, data[i:i+len-1])[1]);  i+=len
+	unused18 = 0 != swap(reinterpret(Int32, data[i:i+len-1])[1]);  i+=len
 	# 8 characters long
-	kstnm = ascii(char(data[i:i+clen-1]));  i+=clen
+	kstnm = ascii(map(Char, data[i:i+clen-1]));  i+=clen
 	# 16 characters long
-	kevnm = ascii(char(data[i:i+2*clen-1]));  i+=2*clen
+	kevnm = ascii(map(Char, data[i:i+2*clen-1]));  i+=2*clen
 	# 8 characters long again
-	khole = ascii(char(data[i:i+clen-1]));  i+=clen
-	ko = ascii(char(data[i:i+clen-1]));  i+=clen
-	ka = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt0 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt1 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt2 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt3 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt4 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt5 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt6 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt7 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt8 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kt9 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kf = ascii(char(data[i:i+clen-1]));  i+=clen
-	kuser0 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kuser1 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kuser2 = ascii(char(data[i:i+clen-1]));  i+=clen
-	kcmpnm = ascii(char(data[i:i+clen-1]));  i+=clen
-	knetwk = ascii(char(data[i:i+clen-1]));  i+=clen
-	kdatrd = ascii(char(data[i:i+clen-1]));  i+=clen
-	kinst = ascii(char(data[i:i+clen-1]));  i+=clen
+	khole = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	ko = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	ka = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt0 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt1 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt2 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt3 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt4 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt5 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt6 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt7 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt8 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kt9 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kf = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kuser0 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kuser1 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kuser2 = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kcmpnm = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	knetwk = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kdatrd = ascii(map(Char, data[i:i+clen-1]));  i+=clen
+	kinst = ascii(map(Char, data[i:i+clen-1]));  i+=clen
 	# Trace
 	t = zeros(npts)
 	for i = 1:npts
-		j = int(633 + (i-1)*len)
+		j = Int(633 + (i-1)*len)
 		t[i] = swap(reinterpret(Float32, data[j:j+len-1])[1])
 	end
 
-	return SACtr(delta, depmin, depmax, scale, odelta, b, e, o, a, internal0,
+	s = SACtr(delta, depmin, depmax, scale, odelta, b, e, o, a, internal0,
         t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, f,
 		resp0, resp1, resp2, resp3, resp4, resp5, resp6, resp7, resp8, resp9,
 		stla, stlo, stel, stdp, evla, evlo, evel, evdp, mag,
@@ -607,11 +607,11 @@ function write(s::SACtr, file::ASCIIString; byteswap=sac_force_swap)
 	w(f, s.unused15)
 	w(f, s.unused16)
 	w(f, s.unused17)
-	w(f, int32(s.leven))
-	w(f, int32(s.lpspol))
-	w(f, int32(s.lovrok))
-	w(f, int32(s.lcalda))
-	w(f, int32(s.unused18))
+	w(f, Int32(s.leven))
+	w(f, Int32(s.lpspol))
+	w(f, Int32(s.lovrok))
+	w(f, Int32(s.lcalda))
+	w(f, Int32(s.unused18))
 	# No byte-swapping needed for characters, but pad them to the correct length
 	w(f, s.kstnm, saccharlen)
 	w(f, s.kevnm, 2*saccharlen)
@@ -753,7 +753,7 @@ function fft(s::SACtr)
 	# Return the fourier-transformed trace and the frequencies to go along with it
 	N = round(Int, s.npts/2) + 1
 	fmax = 1./(s.npts*s.delta)
-	f = [1:N]*fmax
+	f = collect(1:N)*fmax
 	S = Base.fft(s.t)[1:N]
 	return f, S
 end
