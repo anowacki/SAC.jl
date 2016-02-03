@@ -1,5 +1,12 @@
+"""
+SAC.jl provides routines for dealing with SAC-formatted time series files,
+including reading, writing, filtering, mean removal, rotating, and so on.
+Sister library SACPlot.jl can be used for plotting.
+"""
 module SAC
 # Contains routines for dealing with SAC-formatted files
+
+__precompile__()
 
 import DSP
 import Glob
@@ -263,12 +270,12 @@ function SACtr(delta, npts)
 end
 
 @doc """
-read(file; byteswap=true, terse=false) -> s::SACtr
+`read(file; byteswap=true, terse=false) -> s::SACtr`
 
-   Read a SAC trace from \"file\".  If \"byteswap\" is true,
-   enforce swapping between native-endian and non-native-endian.
-   If \"terse\" is true, do not print warnings.
-   Returns a SACtr type \"s\".
+Read a SAC trace from `file`.  If `byteswap` is true,
+enforce swapping between native-endian and non-native-endian.
+If `terse` is true, do not print warnings.
+Returns a SACtr type `s`.
 """ ->
 function read(file; byteswap="auto", terse::Bool=false)
 	# Read a binary SAC evenly-spaced time series file from disk.  Try to byteswap
@@ -474,10 +481,10 @@ function read(file; byteswap="auto", terse::Bool=false)
 end
 
 @doc """
-write(s::SACtr, file; byteswap)
+`write(s::SACtr, file; byteswap)`
 
-   Write a SAC trace \"s\" to \"file\".  If \"byteswap\" is true, write
-   in non-native-endian format.
+Write a SAC trace `s` to `file`.  If `byteswap` is true, write
+in non-native-endian format.
 """ ->
 function write(s::SACtr, file::ASCIIString; byteswap=sac_force_swap)
 	# Write a SAC composed type to file
@@ -634,9 +641,9 @@ function write(s::SACtr, file::ASCIIString; byteswap=sac_force_swap)
 end
 
 @doc """
-copy(s::SACtr) -> t::SACtr
+`copy(s::SACtr) -> t::SACtr`
 
-   Return a copy of SAC trace <s>.
+Return a copy of SAC trace `s`.
 """ ->
 function copy(s::SACtr)
 	# Return a copy of a SAC trace
@@ -660,12 +667,12 @@ function copy(s::SACtr)
 end
 
 @doc """
-read_wild(pat, dir=\"./\"; echo=true) -> A, files
+`read_wild(pat, dir=\"./\"; echo=true) -> A, files`
 
-   Read files matching globbing pattern \"pat\" from directory \"dir\".
-   If \"echo\" is false, do not show which files are being read.
+Read files matching globbing pattern `pat` from directory `dir`.
+If `echo` is false, do not show which files are being read.
 
-   Returns an array of SACtr types \"A\", and an
+Returns an array of SACtr types `A`, and an
 """ ->
 function read_wild(pat::ASCIIString, dir::ASCIIString="."; echo::Bool=true)
 	# Return an array of SACtr types, and an array which gives the file path
@@ -690,7 +697,7 @@ function read_wild(pat::ASCIIString, dir::ASCIIString="."; echo::Bool=true)
 end
 
 @doc """
-sample() -> ::SACtr
+`sample() -> ::SACtr`
 
 Return some sample SAC data
 """ ->
@@ -702,9 +709,9 @@ end
 
 
 @doc """
-cut!(s::SACtr, b::Number, e::Number)
+`cut!(s::SACtr, b::Number, e::Number)`
 
-Cut a trace \"s\" in memory between times \"b\" and \"e\", relative to O marker
+Cut a trace `s` in memory between times `b` and `e`, relative to O marker
 """ ->
 function cut!(s::SACtr, b::Number, e::Number)
 	if b < s.b
@@ -734,10 +741,10 @@ function cut!(a::Array{SACtr}, b, e)
 end
 
 @doc """
-fft(s::SACtr) -> f, S
+`fft(s::SACtr) -> f, S`
 
-   Return the Fourier-transformed trace from \"s\" as \"S\", with the frequencies
-   which correspond to each point in \"f\".
+Return the Fourier-transformed trace from `s` as `S`, with the frequencies
+which correspond to each point in `f`.
 """ ->
 function fft(s::SACtr)
 	# Return the fourier-transformed trace and the frequencies to go along with it
@@ -759,9 +766,9 @@ function fft(a::Array{SACtr})
 end
 
 @doc """
-rmean!(::SACtr)
+`rmean!(::SACtr)`
 
-   Remove the mean in-place for a SAC trace.
+Remove the mean in-place for a SAC trace.
 """ ->
 function rmean!(s::SACtr)
 	# Remove the mean in-place
@@ -777,9 +784,9 @@ function rmean!(a::Array{SACtr})
 end
 
 @doc """
-rtrend!(::SACtr)
+`rtrend!(::SACtr)`
 
-   Remove the trend from a SAC trace in place.
+Remove the trend from a SAC trace in place.
 """ ->
 function rtrend!(s::SACtr)
 	# Remove the trend in-place
@@ -811,9 +818,9 @@ function update_headers!(a::Array{SACtr})
 end
 
 @doc """
-time(::SACtr) -> t
+`time(::SACtr) -> t`
 
-   Return an array \"t\" which contains the time for each sample of the SAC trace.
+Return an array `t` which contains the time for each sample of the SAC trace.
 """ ->
 function time(s::SACtr)
 	# Return an array containing the times for each sample
@@ -821,13 +828,13 @@ function time(s::SACtr)
 end
 
 @doc """
-bandpass!(::SACtr, c1, c2; ftype=\"butterworth\", npoles=2, passes=1)
+`bandpass!(::SACtr, c1, c2; ftype=\"butterworth\", npoles=2, passes=1)`
 
-   Perform a bandpass filter on the SAC trace, between frequency corners \"c1\"
-   and \"c2\".\n
-   Select type of filter with \"ftype\": current options are: \"butterworth\".
-   Set number of poles with \"npoles\".\n
-   \"passes\" may be 1 (forward) or 2 (forward and reverse).
+Perform a bandpass filter on the SAC trace, between frequency corners `c1`
+and `c2`.\n
+Select type of filter with `ftype`: current options are: `butterworth`.
+Set number of poles with `npoles`.\n
+`passes` may be 1 (forward) or 2 (forward and reverse).
 """ ->
 function bandpass!(s::SACtr, c1::Number, c2::Number;
 		ftype::ASCIIString="butterworth", npoles::Integer=sac_npoles,
@@ -866,12 +873,12 @@ end
 bp! = bandpass!
 
 @doc """
-highpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)
+`highpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)`
 
-   Perform a highpass filter on the SAC trace, above frequency corner \"c\".\n
-   Select type of filter with \"ftype\": current options are: \"butterworth\".
-   Set number of poles with \"npoles\".\n
-   \"passes\" may be 1 (forward) or 2 (forward and reverse).
+Perform a highpass filter on the SAC trace, above frequency corner `c`.\n
+Select type of filter with `ftype`: current options are: `butterworth`.
+Set number of poles with `npoles`.\n
+`passes` may be 1 (forward) or 2 (forward and reverse).
 """ ->
 function highpass!(s::SACtr, c::Number;
 		ftype::ASCIIString="butterworth", npoles::Integer=sac_npoles,
@@ -894,12 +901,12 @@ end
 hp! = highpass!
 
 @doc """
-lowpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)
+`lowpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)`
 
-   Perform a lowpass filter on the SAC trace, above frequency corner \"c\".\n
-   Select type of filter with \"ftype\": current options are: \"butterworth\".
-   Set number of poles with \"npoles\".\n
-   \"passes\" may be 1 (forward) or 2 (forward and reverse).
+Perform a lowpass filter on the SAC trace, above frequency corner `c`.\n
+Select type of filter with `ftype`: current options are: `butterworth`.
+Set number of poles with `npoles`.\n
+`passes` may be 1 (forward) or 2 (forward and reverse).
 """ ->
 function lowpass!(s::SACtr, c::Number;
 		ftype::ASCIIString="butterworth", npoles::Integer=sac_npoles,
@@ -922,12 +929,12 @@ end
 lp! = lowpass!
 
 @doc """
-rotate_through!(::SACtr, ::SACtr, phi)
+`rotate_through!(::SACtr, ::SACtr, phi)`
 
-   Given two SAC traces which are horizontal and orthgonal, rotate them clockwise
-   by \"phi\"° about the vertical axis.  This is a reference frame transformation
-   (passive rotation) and hence particle motion will appear to rotate
-   anti-clockwise.
+Given two SAC traces which are horizontal and orthgonal, rotate them clockwise
+by `phi`° about the vertical axis.  This is a reference frame transformation
+(passive rotation) and hence particle motion will appear to rotate
+anti-clockwise.
 """ ->
 function rotate_through!(s1::SACtr, s2::SACtr, phi)
 	# Rotate two orthogonal horizontal traces clockwise by ('through') phi (degrees).
@@ -963,13 +970,13 @@ function rotate_through!(a::Array{SACtr}, phi)
 end
 
 @doc """
-tshift!(::SACtr, tshift; warp=true)
+`tshift!(::SACtr, tshift; wrap=true)`
 
-   Shift a SAC trace backward in time by \"t\" seconds.
+Shift a SAC trace backward in time by `t` seconds.
 
-   If \"wrap\" true (default), then points which move out the back of the trace
-   are added to the front (and vice versa).  Setting it to false instead pads the
-   trace with zeroes.
+If `wrap` true (default), then points which move out the back of the trace
+are added to the front (and vice versa).  Setting it to false instead pads the
+trace with zeroes.
 """ ->
 function tshift!(s::SACtr, tshift::Number; wrap=true)
 	# Shift a trace backward in time by t seconds, wrapping around by default,
