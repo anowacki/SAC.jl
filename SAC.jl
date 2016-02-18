@@ -1003,6 +1003,7 @@ function tshift!(s::SACtr, tshift::Number; wrap=true)
 	if !wrap
 		n > 0 ? s.t[1:n] = 0. : s.t[end+n+1:end] = 0.
 	end
+	update_headers!(s)
 	return
 end
 
@@ -1015,9 +1016,45 @@ function envelope!(a::Array{SACtr})
     for s in a
 		s.t = abs(DSP.hilbert(s.t))
 	end
-	return
+	update_headers!(a)
 end
 envelope!(s::SACtr) = envelope!([s])
+
+@doc """
+`multiply!(::SACtr, value)`
+
+Multiply the values in a SAC trace by `value`
+""" ->
+function multiply!(a::Array{SACtr}, val)
+    for s in a s.t[:] = s.t[:]*val end
+	update_headers!(a)
+end
+multiply!(s::SACtr, val) = multiply!([s], val)
+mul! = multiply!
+
+@doc """
+`add!(::SACtr, value)`
+
+Add a constant value to a SAC trace
+""" ->
+function add!(a::Array{SACtr}, val)
+	for s in a s.t[:] = s.t[:] + val end
+    update_headers!(a)
+end
+add!(s::SACtr, val) = add!([s], val)
+
+@doc """
+`divide!(::SACtr, value)`
+
+Divide the values in a SAC trace by `value`
+""" ->
+function divide!(a::Array{SACtr}, value)
+	value != 0. || error("SAC.divide!: Cannot divide by 0")
+    multiply!(a, 1./value)
+end
+divide!(s::SACtr, value) = divide!([s], value)
+div! = divide!
+
 
 function apply_filter!(s::SACtr, f, passes::Integer)
 		passes < 1 || passes > 2 && error("SAC.apply_filter!: Number of passes must be 1 or 2")
