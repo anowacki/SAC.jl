@@ -42,12 +42,20 @@ const SACChar = ASCIIString
 const SACInt = Int32
 const SACBool = Bool
 # Constructors
-sacfloat = float32
-sacint = int32
-sacchar = ascii
-sacbool = bool
+sacfloat(x) = map(Float32, x)
+sacint(x) = map(Int32, x)
+const sacchar = ascii
+sacbool(x) = x != 0
+# Length of SAC floats and ints
+const sac_byte_len = 4
 # Length of SAC character headers (except kevnm, which is twice the length)
 const saccharlen = 8
+# SAC file version number
+const sac_ver_num = SACInt(6)
+# Whether this machine is big- or little endian.  SAC files are meant to be big-endian,
+# so this determines whether a file is native-endian or not.
+const machine_is_little_endian = true
+
 # Convert a number into a SACChar
 sacstring(x, maxlen=saccharlen) = sacchar(string(x)[1:minimum((length(string(x)),maxlen))]*" "^(maximum((0,maxlen-length(string(x))))))
 
@@ -66,211 +74,76 @@ const sac_force_swap = true
 # Flag for verbosity
 sac_verbose = true
 
+# Lists of SAC headers as symbols
+const sac_float_hdr = [:delta, :depmin, :depmax, :scale, :odelta, :b,
+    :e, :o, :a, :internal0, :t0, :t1,
+    :t2, :t3, :t4, :t5, :t6, :t7,
+    :t8, :t9, :f, :resp0, :resp1, :resp2,
+    :resp3, :resp4, :resp5, :resp6, :resp7, :resp8,
+    :resp9, :stla, :stlo, :stel, :stdp, :evla,
+    :evlo, :evel, :evdp, :mag, :user0, :user1,
+    :user2, :user3, :user4, :user5, :user6, :user7,
+    :user8, :user9, :dist, :az, :baz, :gcarc,
+    :internal1, :internal2, :depmen, :cmpaz, :cmpinc, :xminimum,
+    :xmaximum, :yminimum, :ymaximum, :unused1, :unused2, :unused3,
+    :unused4, :unused5, :unused6, :unused7]
+const sac_int_hdr = [:nzyear, :nzjday, :nzhour, :nzmin, :nzsec, :nzmsec,
+    :nvhdr, :norid, :nevid, :npts, :internal3, :nwfid,
+    :nxsize, :nysize, :unused8, :iftype, :idep, :iztype,
+    :unused9, :iinst, :istreg, :ievreg, :ievtyp, :iqual,
+    :isynth, :imagtyp, :imagsrc, :unused10, :unused11, :unused12,
+    :unused13, :unused14, :unused15, :unused16, :unused17]
+const sac_bool_hdr = [:leven, :lpspol, :lovrok, :lcalda, :unused18]
+const sac_char_hdr = [:kstnm, :kevnm, :khole, :ko, :ka, :kt0,
+    :kt1, :kt2, :kt3, :kt4, :kt5, :kt6,
+    :kt7, :kt8, :kt9, :kf, :kuser0, :kuser1,
+    :kuser2, :kcmpnm, :knetwk, :kdatrd, :kinst]
+const sac_all_hdr = [sac_float_hdr; sac_int_hdr; sac_bool_hdr; sac_char_hdr]
+
 # Composite type for SAC evenly-spaced time series data
-type SACtr
-	# Header, floating point.  These are Float32, but we use
-	# FloatingPoint internally for ease of use.
-	delta::SACFloat
-	depmin::SACFloat
-	depmax::SACFloat
-	scale::SACFloat
-	odelta::SACFloat
-	b::SACFloat
-	e::SACFloat
-	o::SACFloat
-	a::SACFloat
-	internal0::SACFloat
-	t0::SACFloat
-	t1::SACFloat
-	t2::SACFloat
-	t3::SACFloat
-	t4::SACFloat
-	t5::SACFloat
-	t6::SACFloat
-	t7::SACFloat
-	t8::SACFloat
-	t9::SACFloat
-	f::SACFloat
-	resp0::SACFloat
-	resp1::SACFloat
-	resp2::SACFloat
-	resp3::SACFloat
-	resp4::SACFloat
-	resp5::SACFloat
-	resp6::SACFloat
-	resp7::SACFloat
-	resp8::SACFloat
-	resp9::SACFloat
-	stla::SACFloat
-	stlo::SACFloat
-	stel::SACFloat
-	stdp::SACFloat
-	evla::SACFloat
-	evlo::SACFloat
-	evel::SACFloat
-	evdp::SACFloat
-	mag::SACFloat
-	user0::SACFloat
-	user1::SACFloat
-	user2::SACFloat
-	user3::SACFloat
-	user4::SACFloat
-	user5::SACFloat
-	user6::SACFloat
-	user7::SACFloat
-	user8::SACFloat
-	user9::SACFloat
-	dist::SACFloat
-	az::SACFloat
-	baz::SACFloat
-	gcarc::SACFloat
-	internal1::SACFloat
-	internal2::SACFloat
-	depmen::SACFloat
-	cmpaz::SACFloat
-	cmpinc::SACFloat
-	xminimum::SACFloat
-	xmaximum::SACFloat
-	yminimum::SACFloat
-	ymaximum::SACFloat
-	unused1::SACFloat
-	unused2::SACFloat
-	unused3::SACFloat
-	unused4::SACFloat
-	unused5::SACFloat
-	unused6::SACFloat
-	unused7::SACFloat
-	# Integer parts.  These are Int32; again, we use Integer
-    nzyear::SACInt
-	nzjday::SACInt
-	nzhour::SACInt
-	nzmin::SACInt
-	nzsec::SACInt
-	nzmsec::SACInt
-	nvhdr::SACInt
-	norid::SACInt
-	nevid::SACInt
-	npts::SACInt
-	internal3::SACInt
-	nwfid::SACInt
-	nxsize::SACInt
-	nysize::SACInt
-	unused8::SACInt
-	iftype::SACInt
-	idep::SACInt
-	iztype::SACInt
-	unused9::SACInt
-	iinst::SACInt
-	istreg::SACInt
-	ievreg::SACInt
-	ievtyp::SACInt
-	iqual::SACInt
-	isynth::SACInt
-	imagtyp::SACInt
-	imagsrc::SACInt
-	unused10::SACInt
-	unused11::SACInt
-	unused12::SACInt
-	unused13::SACInt
-	unused14::SACInt
-	unused15::SACInt
-	unused16::SACInt
-	unused17::SACInt
-	# Logical part: boolean
-	leven::SACBool
-	lpspol::SACBool
-	lovrok::SACBool
-	lcalda::SACBool
-	unused18::SACBool
-	# Character parts
-	kstnm::SACChar
-	kevnm::SACChar
-	khole::SACChar
-	ko::SACChar
-	ka::SACChar
-	kt0::SACChar
-	kt1::SACChar
-	kt2::SACChar
-	kt3::SACChar
-	kt4::SACChar
-	kt5::SACChar
-	kt6::SACChar
-	kt7::SACChar
-	kt8::SACChar
-	kt9::SACChar
-	kf::SACChar
-	kuser0::SACChar
-	kuser1::SACChar
-	kuser2::SACChar
-	kcmpnm::SACChar
-	knetwk::SACChar
-	kdatrd::SACChar
-	kinst::SACChar
-	# The time series
-	t::Array{SACFloat,1}
+@eval type SACtr
+    $([:($(s)::SACFloat) for s in sac_float_hdr]...)
+    $([:($(s)::SACInt) for s in sac_int_hdr]...)
+    $([:($(s)::SACBool) for s in sac_bool_hdr]...)
+    $([:($(s)::SACChar) for s in sac_char_hdr]...)
+    # The time series, accessed with .t
+    t::Array{SACFloat,1}
+    function SACtr(delta_in::Number, npts_in::Integer, b_in=0.)
+        delta_in > 0 || error("SACtr: delta must be positive")
+        npts_in >= 0 || error("SACtr: npts must be 0 or larger")
+        # Variables are by default undefined, or false for bools
+        $([:($(s) = sac_rnull) for s in sac_float_hdr]...)
+        $([:($(s) = sac_inull) for s in sac_int_hdr]...)
+        $([:($(s) = false) for s in sac_bool_hdr]...)
+        $([:($(s) = sac_cnull) for s in sac_char_hdr]...)
+        # Variables which must be present
+        npts = convert(SACInt, npts_in)
+        delta = convert(SACFloat, delta_in)
+    	b = b_in
+    	e = b + (npts - 1)*delta
+    	t = zeros(npts)
+    	depmin = 0.
+    	depmax = 0.
+    	nvhdr = sac_ver_num
+    	iftype = 1
+    	idep = 5
+    	iztype = 9
+    	ievtyp = 5
+    	leven = true
+    	lovrok = true
+    	lcalda = true
+        new($([:($(s)) for s in [sac_float_hdr; sac_int_hdr; sac_bool_hdr; sac_char_hdr]]...),
+            t)
+    end
 end
+@doc """
+    SACtr(delta, npts, b=0.)
 
-function SACtr(delta, npts)
-	# Return a new SAC type with field filled in
-	# Define variables which must be present
-	b = 0.
-	e = (npts - 1)*delta
-	t = zeros(npts)
-	depmin = 0.
-	depmax = 0.
-	nvhdr = 6
-	iftype = 1
-	idep = 5
-	iztype = 9
-	ievtyp = 5
-	leven = true
-	lpspol = false
-	lovrok = true
-	lcalda = true
-	unused18 = false
-	# Other variables are by default undefined
-	scale = odelta = o = a = internal0 =
-	        t0 = t1 = t2 = t3 = t4 = t5 = t6 = t7 = t8 = t9 = f =
-	        resp0 = resp1 = resp2 = resp3 = resp4 = resp5 = resp6 = resp7 = resp8 = resp9 =
-	        stla = stlo = stel = stdp = evla = evlo = evel = evdp = mag =
-	        user0 = user1 = user2 = user3 = user4 = user5 = user6 = user7 = user8 = user9 =
-	        dist = az = baz = gcarc = internal1 = internal2 = depmen = cmpaz = cmpinc =
-	        xminimum = xmaximum = yminimum = ymaximum =
-	        unused1 = unused2 = unused3 = unused4 = unused5 = unused6 = unused7 =
-		sac_rnull
-	nzyear = nzjday = nzhour = nzmin = nzsec = nzmsec =
-			nvhdr = norid = nevid = npts = internal3 = nwfid = nxsize = nysize = unused8 =
-			iftype = idep = iztype = unused9 = iinst = istreg = ievreg = ievtyp = iqual =
-			isynth = imagtyp = imagsrc = unused10 = unused11 = unused12 = unused13 =
-			unused14 = unused15 = unused16 = unused17 =
-		sac_inull
-	kevnm = kstnm = khole = ko = ka = kt0 = kt1 = kt2 = kt3 = kt4 = kt5 = kt6 = kt7 =
-			kt8 = kt9 = kf = kuser0 = kuser1 = kuser2 = kcmpnm = knetwk = kdatrd = kinst =
-		sac_cnull
-
-
-	return SACtr(delta, depmin, depmax, scale, odelta, b, e, o, a, internal0,
-        t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, f,
-		resp0, resp1, resp2, resp3, resp4, resp5, resp6, resp7, resp8, resp9,
-		stla, stlo, stel, stdp, evla, evlo, evel, evdp, mag,
-		user0, user1, user2, user3, user4, user5, user6, user7, user8, user9,
-		dist, az, baz, gcarc, internal1, internal2, depmen, cmpaz, cmpinc,
-		xminimum, xmaximum, yminimum, ymaximum,
-		unused1, unused2, unused3, unused4, unused5, unused6, unused7,
-		# Integers
-		nzyear, nzjday, nzhour, nzmin, nzsec, nzmsec,
-		nvhdr, norid, nevid, npts, internal3, nwfid, nxsize, nysize, unused8,
-		iftype, idep, iztype, unused9, iinst, istreg, ievreg, ievtyp, iqual,
-		isynth, imagtyp, imagsrc, unused10, unused11, unused12, unused13,
-		unused14, unused15, unused16, unused17,
-		# Logical
-		leven, lpspol, lovrok, lcalda, unused18,
-		# Character
-		kstnm, kevnm, khole, ko, ka, kt0, kt1, kt2, kt3, kt4, kt5, kt6, kt7,
-		kt8, kt9, kf, kuser0, kuser1, kuser2, kcmpnm, knetwk, kdatrd, kinst,
-		# Trace
-		t)
-end
+Construct a composite type holding an evenly-spaced SAC time-series trace, where the trace
+is accessed through the field name `t`.  Supply the constant sampling interval `delta`
+in seconds, and the number of points in the trace `t`.  Optionally, specify the trace
+start time `b` in seconds.
+""" SACtr
 
 @doc """
 `read(file; byteswap=true, terse=false) -> s::SACtr`
@@ -454,11 +327,12 @@ function read(file; byteswap="auto", terse::Bool=false)
 	kdatrd = ascii(map(Char, data[i:i+clen-1]));  i+=clen
 	kinst = ascii(map(Char, data[i:i+clen-1]));  i+=clen
 	# Trace
-	t = zeros(npts)
+	t = Array{SACFloat}(npts)
 	for i = 1:npts
 		j = Int(633 + (i-1)*len)
 		t[i] = swap(reinterpret(Float32, data[j:j+len-1])[1])
 	end
+    println(t)
 
 	s = SACtr(delta, depmin, depmax, scale, odelta, b, e, o, a, internal0,
         t0, t1, t2, t3, t4, t5, t6, t7, t8, t9, f,
@@ -484,6 +358,85 @@ function read(file; byteswap="auto", terse::Bool=false)
 	update_headers!(s)
 	return s
 end
+
+@eval function read2(file; swap::Bool=true, terse::Bool=false)
+    const len = sac_byte_len
+    const clen = 2*sac_byte_len
+    # Determine endianness and act accordingly
+    native = file_is_native_endian(file)
+    native && machine_is_little_endian && !swap &&
+        error("File '$file' is little-endian, but `swap` is `false`; use set to `true` to auto-byteswap")
+    native && machine_is_little_endian && !terse &&
+        info("File '$file' is little-endian; byteswapping") 
+    byteswap(x) = native ? x : bswap(x)
+    
+    ## Read data
+    data = readbytes(open(file, "r"))
+    
+    ## Read header
+    # Float part
+    $([:($s = byteswap(reinterpret(SACFloat, data[(($i-1)*len)+1:$i*len])[1])) for (s, i) in zip(sac_float_hdr, 1:length(sac_float_hdr))]...)
+    off = length(sac_float_hdr)*len
+    # Int part
+    $([:($s = byteswap(reinterpret(SACInt, data[(($i-1)*len)+1+off:$i*len+off])[1])) for (s, i) in zip(sac_int_hdr, 1:length(sac_int_hdr))]...)
+    off += length(sac_int_hdr)*len
+    # Boolean part
+    $([:($s = 0 != byteswap(reinterpret(SACInt, data[(($i-1)*len)+1+off:$i*len+off])[1])) for (s, i) in zip(sac_bool_hdr, 1:length(sac_bool_hdr))]...)
+    off += length(sac_bool_hdr)*len
+    # Character part
+    # kevnm header is double length, so split into two then recombine
+    char_sym_list = [sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]]
+    $([:($s = ascii(reinterpret(UInt8, data[(($i-1)*clen)+1+off:$i*clen+off]))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
+    kevnm = kevnm1 * kevnm2
+    off += (length(sac_char_hdr) + 1)*clen
+    
+    # Create an empty object...
+    trace = SACtr(delta, npts)
+    # ...and fill the headers...
+    $([:(trace.$s = $s) for s in sac_all_hdr]...)
+    # ...then read in the trace
+    for i = 1:npts
+        trace.t[i] = byteswap(reinterpret(SACFloat, data[(i-1)*len+1+off:i*len+off])[1])
+    end
+    trace
+end
+@doc """
+    read2(file; swap=true, terse=false) -> s::SACtr
+
+Return the SAC trace as read from file `file` as a `SACtr` object.  If `swap` is false,
+then auto-byteswapping is not performed and an error is returned if the file is not
+of the assumed endianness.  Autoswapping is reported unless `terse` is `true`.
+""" read2
+
+"""
+`file_is_native_endian(file)`
+
+Return `true` if `file` is a native-endian (defined by a constant in the module to be
+little-endian on this machine) SAC file, and `false` if not.
+
+The heuristic is thus: native-endian files have bytes 305:308 which are
+a representation of the value `6`.  `6` is the current magic SAC file version number,
+hard-coded into the routine.
+"""
+function file_is_native_endian(file)
+    const nvhdr_pos = length(sac_float_hdr) + find(sac_int_hdr .== :nvhdr)[1] - 1
+    nvhdr = try
+        reinterpret(SACInt, readbytes(
+            open(file, "r"), nvhdr_pos*sac_byte_len + sac_byte_len)[end-sac_byte_len+1:end])[1]
+    catch
+        error("SAC.file_is_native_endian: Cannot open file '$file' for reading " *
+            "or file is not the correct type")
+    end
+    if nvhdr == sac_ver_num
+        return true
+    elseif bswap(nvhdr) == sac_ver_num
+        return false
+    else
+        error("SAC.file_is_native_endian: File '$file' does not appear to be a " *
+            "valid SAC file (nvhdr is $nvhdr)")
+    end
+end
+
 
 @doc """
 `write(s::SACtr, file; byteswap)`
