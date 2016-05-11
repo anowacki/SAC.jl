@@ -29,6 +29,7 @@ export SACtr,
     rmean!,
     rotate_through!,
     rtrend!,
+    taper!,
     time,
     tshift!,
     write
@@ -428,6 +429,54 @@ function rtrend!(a::Array{SACtr})
         rtrend!(s)
     end
 end
+
+"""
+    taper!(s::SACtr, width=0.05, form=:hanning)
+    taper!(S::Array{SACtr}, width=0.05, form=:hanning)
+
+Apply a symmetric taper to each end of the data in SAC trace `s` or traces `S`.
+
+`form` may be one of `:hanning`, `:hamming` or `:cosine`.
+
+`width` represents the fraction (at both ends) of the trace tapered, up to 0.5.
+"""
+function taper!(s::SACtr, width=0.05, form=:hanning::Symbol)
+    form in [:hamming, :hanning, :cosine] ||
+        error("SAC.taper!: `form` must be one of `:hamming`, `:hanning` or `:cosine`")
+    0 < width <= 0.5 || error("SAC.taper!: width must be between 0 and 0.5")
+    n = max(2, floor(Int, (s.npts + 1)*width))
+
+    if form in [:hamming, :hanning]
+        omega = SAC.SACFloat(pi/n)
+        if form == :hanning
+            f0 = f1 = SAC.SACFloat(0.50)
+        elseif form == :hamming
+            f0 = SAC.SACFloat(0.54)
+            f1 = SAC.SACFloat(0.46)
+        end
+
+        @inbounds for i in 0:n-1
+            amp = f0 - f1*cos(omega*SAC.SACFloat(i))
+            j = s.npts - i
+            s.t[i+1] *= amp
+            s.t[j] *= amp
+        end
+    end
+
+    if form == :cosine
+        omega = SAC.SACFloat(pi/(2*n))
+        @inbounds for i in 0:n-1
+            amp = sin(omega*i)
+            j = s.npts - i
+            s.t[i+1] *= amp
+            s.t[j] *= amp
+        end
+    end
+
+    SAC.update_headers!(s)
+    return
+end
+taper!(S::Array{SACtr}, width=0.05, form=:hamming::Symbol) = for s in S taper!(s, width, form) end
 
 function update_headers!(s::SACtr)
     # Update headers which are automatically calculated from the trace
