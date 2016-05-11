@@ -4,7 +4,6 @@ including reading, writing, filtering, mean removal, rotating, and so on.
 Sister library SACPlot.jl can be used for plotting.
 """
 module SAC
-# Contains routines for dealing with SAC-formatted files
 
 __precompile__()
 
@@ -152,12 +151,12 @@ start time `b` in seconds.
     native && machine_is_little_endian && !swap &&
         error("File '$file' is little-endian, but `swap` is `false`; use set to `true` to auto-byteswap")
     native && machine_is_little_endian && !terse &&
-        info("File '$file' is little-endian; byteswapping") 
+        info("File '$file' is little-endian; byteswapping")
     byteswap(x) = native ? x : bswap(x)
-    
+
     ## Read data
     data = readbytes(open(file, "r"))
-    
+
     ## Read header
     # Float part
     $([:($s = byteswap(reinterpret(SACFloat, data[(($i-1)*len)+1:$i*len])[1])) for (s, i) in zip(sac_float_hdr, 1:length(sac_float_hdr))]...)
@@ -174,7 +173,7 @@ start time `b` in seconds.
     $([:($s = ascii(reinterpret(UInt8, data[(($i-1)*clen)+1+off:$i*clen+off]))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
     kevnm = kevnm1 * kevnm2
     off += (length(sac_char_hdr) + 1)*clen
-    
+
     # Create an empty object...
     trace = SACtr(delta, npts)
     # ...and fill the headers...
@@ -195,7 +194,7 @@ of the assumed endianness.  Autoswapping is reported unless `terse` is `true`.
 """ read
 
 """
-`file_is_native_endian(file)`
+    file_is_native_endian(file)
 
 Return `true` if `file` is a native-endian (defined by a constant in the module to be
 little-endian on this machine) SAC file, and `false` if not.
@@ -266,6 +265,7 @@ function write(s::Array{SACtr}, file::Array{ByteString}; byteswap=sac_force_swap
     return
 end
 
+
 @doc """
 `copy(s::SACtr) -> t::SACtr`
 
@@ -293,12 +293,12 @@ function copy(s::SACtr)
 end
 
 @doc """
-`read_wild(pat, dir=\"./\"; echo=true) -> A, files`
+    read_wild(pat, dir=\"./\"; echo=true) -> A, files
 
 Read files matching globbing pattern `pat` from directory `dir`.
 If `echo` is false, do not show which files are being read.
 
-Returns an array of SACtr types `A`, and an
+Returns an array of SACtr types `A`, and an array of file names `files`.
 """ ->
 function read_wild(pat::ASCIIString, dir::ASCIIString="."; echo::Bool=true)
     # Return an array of SACtr types, and an array which gives the file path
@@ -323,7 +323,7 @@ function read_wild(pat::ASCIIString, dir::ASCIIString="."; echo::Bool=true)
 end
 
 @doc """
-`sample() -> ::SACtr`
+    sample() -> ::SACtr
 
 Return some sample SAC data
 """ ->
@@ -335,7 +335,7 @@ end
 
 
 @doc """
-`cut!(s::SACtr, b::Number, e::Number)`
+    cut!(s::SACtr, b::Number, e::Number)
 
 Cut a trace `s` in memory between times `b` and `e`, relative to O marker
 """ ->
@@ -367,7 +367,7 @@ function cut!(a::Array{SACtr}, b, e)
 end
 
 @doc """
-`fft(s::SACtr) -> f, S`
+    fft(s::SACtr) -> f, S
 
 Return the Fourier-transformed trace from `s` as `S`, with the frequencies
 which correspond to each point in `f`.
@@ -392,7 +392,7 @@ function fft(a::Array{SACtr})
 end
 
 @doc """
-`rmean!(::SACtr)`
+    rmean!(::SACtr)
 
 Remove the mean in-place for a SAC trace.
 """ ->
@@ -410,7 +410,7 @@ function rmean!(a::Array{SACtr})
 end
 
 @doc """
-`rtrend!(::SACtr)`
+    rtrend!(::SACtr)
 
 Remove the trend from a SAC trace in place.
 """ ->
@@ -444,7 +444,7 @@ function update_headers!(a::Array{SACtr})
 end
 
 @doc """
-`time(::SACtr) -> t`
+    time(::SACtr) -> t
 
 Return an array `t` which contains the time for each sample of the SAC trace.
 """ ->
@@ -454,7 +454,7 @@ function time(s::SACtr)
 end
 
 @doc """
-`bandpass!(::SACtr, c1, c2; ftype=\"butterworth\", npoles=2, passes=1)`
+    bandpass!(::SACtr, c1, c2; ftype=\"butterworth\", npoles=2, passes=1)
 
 Perform a bandpass filter on the SAC trace, between frequency corners `c1`
 and `c2`.\n
@@ -499,7 +499,7 @@ end
 bp! = bandpass!
 
 @doc """
-`highpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)`
+    highpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)
 
 Perform a highpass filter on the SAC trace, above frequency corner `c`.\n
 Select type of filter with `ftype`: current options are: `butterworth`.
@@ -527,7 +527,7 @@ end
 hp! = highpass!
 
 @doc """
-`lowpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)`
+    lowpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)
 
 Perform a lowpass filter on the SAC trace, above frequency corner `c`.\n
 Select type of filter with `ftype`: current options are: `butterworth`.
@@ -555,7 +555,7 @@ end
 lp! = lowpass!
 
 @doc """
-`rotate_through!(::SACtr, ::SACtr, phi)`
+    rotate_through!(::SACtr, ::SACtr, phi)
 
 Given two SAC traces which are horizontal and orthgonal, rotate them clockwise
 by `phi`° about the vertical axis.  This is a reference frame transformation
@@ -596,7 +596,7 @@ function rotate_through!(a::Array{SACtr}, phi)
 end
 
 @doc """
-`tshift!(::SACtr, tshift; wrap=true)`
+    tshift!(::SACtr, tshift; wrap=true)
 
 Shift a SAC trace backward in time by `t` seconds.
 
@@ -621,7 +621,7 @@ function tshift!(s::SACtr, tshift::Number; wrap=true)
 end
 
 @doc """
-`envelope!(::SACtr)`
+    envelope!(::SACtr)
 
 Find the envelope of a SAC trace
 """ ->
@@ -634,7 +634,7 @@ end
 envelope!(s::SACtr) = envelope!([s])
 
 @doc """
-`multiply!(::SACtr, value)`
+    multiply!(::SACtr, value)
 
 Multiply the values in a SAC trace by `value`
 """ ->
@@ -646,7 +646,7 @@ multiply!(s::SACtr, val) = multiply!([s], val)
 mul! = multiply!
 
 @doc """
-`add!(::SACtr, value)`
+    add!(::SACtr, value)
 
 Add a constant value to a SAC trace
 """ ->
@@ -657,7 +657,7 @@ end
 add!(s::SACtr, val) = add!([s], val)
 
 @doc """
-`divide!(::SACtr, value)`
+    divide!(::SACtr, value)
 
 Divide the values in a SAC trace by `value`
 """ ->
