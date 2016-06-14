@@ -9,12 +9,10 @@ __precompile__()
 
 import DSP
 import Glob
-import Base.write, Base.copy, Base.fft, Base.time
-if VERSION < v"0.4"
-    import Docile.@doc
-end
+import Base: copy, getindex, fft, setindex!, time, write
 
-export SACtr,
+export
+    SACtr,
     bandpass!,
     bp!,
     copy,
@@ -143,6 +141,26 @@ is accessed through the field name `t`.  Supply the constant sampling interval `
 in seconds, and the number of points in the trace `t`.  Optionally, specify the trace
 start time `b` in seconds.
 """ SACtr
+
+"""
+    getindex(A::Array{SACtr}, s::Symbol) -> Array{typeof(A[:].s)}
+
+Return an array of values containing the header with name `s` for the SACtr
+traces.  This allows one to get all the headers values by doing A[:kstnm],
+for example.
+"""
+getindex(A::Array{SACtr}, s::Symbol) =
+    Array{typeof(getfield(A[1], s))}([getfield(a, s) for a in A])
+
+"""
+    setindex!(A::Array{SACtr}, value, s::Symbol)
+
+Set the header with name `s` for all the SACtr traces in the array `A`.  This
+allows one to set all the headers at once for a set of traces by doing e.g.:
+
+    A[:kevnm] = "Blast 1"
+"""
+setindex!(A::Array{SACtr}, v, s::Symbol) = for a in A setfield!(a, s, v) end
 
 @eval function read(file; swap::Bool=true, terse::Bool=false)
     const len = sac_byte_len
