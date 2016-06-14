@@ -258,10 +258,10 @@ Set `byteswap` to `true` to force writing in non-native-endian format; set to `f
 to write native-endian files.  The default is to write bigendian format.
 """ -> write
 
-function write(s::Array{SACtr}, file::Array{ByteString}; byteswap=sac_force_swap)
+function write(s::Array{SACtr}, file::Array{ASCIIString}; args...)
     length(s) == length(file) || error("SAC.write: Arrays must be same length")
     for i = 1:length(s)
-        write(s[i], file[i])
+        write(s[i], file[i]; args...)
     end
     return
 end
