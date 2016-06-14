@@ -330,7 +330,7 @@ Return some sample SAC data
 """ ->
 function sample()
     # Return some sample data, which is what you get when calling `fg seis' in SAC
-    file = dirname(@__FILE__()) * "/data/seis.sac"
+    file = joinpath(dirname(@__FILE__()), "../data/seis.sac")
     return read(file)
 end
 
