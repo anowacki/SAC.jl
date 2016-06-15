@@ -61,6 +61,38 @@ julia> t.t += 1 # Add 1 to all points, like SAC's "add" command
  0.9232 
 ```
 
+You can also get or modify several header values at once by indexing via a
+symbol; basically, using the name of the header variable preceded by a colon:
+
+```julia
+julia> typeof(T)
+Array{SAC.SACtr,1}
+
+julia> T[:t0]
+5-element Array{Float32,1}:
+ 1.0
+ 2.0
+ 3.0
+ 4.0
+ 5.0
+
+julia> T[:t0] += 2 # Move all time markers back by 2 s
+5-element Array{Float32,1}:
+ 3.0
+ 4.0
+ 5.0
+ 6.0
+ 7.0
+
+julia> T[:kstnm] = ["A1", "B2", "C3", "D4", "E5"]
+5-element Array{ASCIIString,1}:
+ "A1"
+ "B2"
+ "C3"
+ "D4"
+ "E5"
+```
+
 ### Reading files
 The `read` function is not exported to avoid name clashes, so one must call
 `SAC.read()`.   For example, to load a single file, do
@@ -106,7 +138,7 @@ in the same endianness as the machine.  SAC.jl is agnostic and will both read
 and write in either endianness, but generally prefers to stick to big-endian,
 for compatibilty with SAC/BRIS.
 
-### Plotting [COMING SOON]
+### Plotting
 A companion repo, [`SACPlot`](https://github.com/anowacki/SACPlot.jl)
 can be used to perform some of the plotting that SAC can do.
 
@@ -128,6 +160,13 @@ search: bandpass!
 
   passes may be 1 (forward) or 2 (forward and reverse).
 ```
+
+### Documentation
+Documentation is a work in progress, but all useful commands are documented.
+To see the list of commands, check the code, or in the REPL type `SAC.` then
+press tab a couple of times to see all the module methods and variables.
+Calling up the interactive help with give a useful description of each.
+
 
 ## Dependencies
 - [Glob.jl](https://github.com/vtjnash/Glob.jl)

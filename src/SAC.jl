@@ -144,23 +144,43 @@ start time `b` in seconds.
 
 """
     getindex(A::Array{SACtr}, s::Symbol) -> Array{typeof(A[:].s)}
+    A[:s] -> Array{typeof(A[:].s)}
 
 Return an array of values containing the header with name `s` for the SACtr
 traces.  This allows one to get all the headers values by doing A[:kstnm],
 for example.
 """
-getindex(A::Array{SACtr}, s::Symbol) =
-    Array{typeof(getfield(A[1], s))}([getfield(a, s) for a in A])
+getindex(A::Array{SACtr}, s::Symbol) = Array{typeof(A[1].(s))}([a.(s) for a in A])
+getindex(t::SACtr, s::Symbol) = t.(s) # Also define for single trace for consistency
 
 """
     setindex!(A::Array{SACtr}, value, s::Symbol)
+    A[:s] = value
 
 Set the header with name `s` for all the SACtr traces in the array `A`.  This
 allows one to set all the headers at once for a set of traces by doing e.g.:
 
     A[:kevnm] = "Blast 1"
+
+or
+
+    A[:user0] = 1:length(A)
 """
-setindex!(A::Array{SACtr}, v, s::Symbol) = for a in A setfield!(a, s, v) end
+function setindex!(A::Array{SACtr}, V, s::Symbol)
+    fieldtype = typeof(A[1].(s))
+    if length(A) == length(V)
+        for (a, v) in zip(A, V)
+            a.(s) = convert(fieldtype, v)
+        end
+    elseif length(V) == 1
+        for a in A
+            a.(s) = convert(fieldtype, V)
+        end
+    else
+        error("Number of header values must be one or the number of traces")
+    end
+end
+setindex!(t::SACtr, v, s::Symbol) = t.(s) = v
 
 @eval function read(file; swap::Bool=true, terse::Bool=false)
     const len = sac_byte_len
