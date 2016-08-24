@@ -375,10 +375,17 @@ end
 
 @doc """
     cut!(s::SACtr, b::Number, e::Number)
+    cut!(s::Array{SACtr}, b::Number, e::Number)
 
-Cut a trace `s` in memory between times `b` and `e`, relative to O marker
+Cut a trace or array of traces `s` in memory between times `b` and `e`, relative
+to the O marker.
+
+    cut!(s::Array{SACtr}, a::Array, b::Array)
+
+Cut the array of traces `s` between the times in arrays `b` and `e`, which must be
+the same length as `s`.
 """ ->
-function cut!(s::SACtr, b::Number, e::Number)
+function cut!(s::SACtr, b::Real, e::Real)
     if b < s.b
         info("SAC.cut!: beginning cut is before start of trace.  Setting to $(s.b).")
         b = s.b
@@ -399,9 +406,16 @@ function cut!(s::SACtr, b::Number, e::Number)
 end
 
 # Array version of cut!
-function cut!(a::Array{SACtr}, b, e)
+function cut!(a::Array{SACtr}, b::Number, e::Number)
     for s in a
         SAC.cut!(s, b, e)
+    end
+end
+
+function cut!{B<:Real,E<:Real}(a::Array{SACtr}, b::Array{B}, e::Array{E})
+    @assert length(a) == length(b) == length(e) "Arrays `a`, `b` and `e` must be the same length"
+    for (s, beg, en) in zip(a, b, e)
+        SAC.cut!(s, beg, en)
     end
 end
 
