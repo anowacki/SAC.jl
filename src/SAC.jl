@@ -9,7 +9,10 @@ __precompile__()
 
 import DSP
 import Glob
-import Base: copy, getindex, fft, setindex!, time, write
+import Base: ==, copy, getindex, fft, setindex!, time, write
+import Compat
+
+const String = Compat.String
 
 export
     SACtr,
@@ -35,7 +38,7 @@ export
 
 # SAC types
 const SACFloat = Float32
-const SACChar = ASCIIString
+const SACChar = String
 const SACInt = Int32
 const SACBool = Bool
 # Constructors
@@ -97,6 +100,9 @@ const sac_char_hdr = [:kstnm, :kevnm, :khole, :ko, :ka, :kt0,
     :kuser2, :kcmpnm, :knetwk, :kdatrd, :kinst]
 const sac_all_hdr = [sac_float_hdr; sac_int_hdr; sac_bool_hdr; sac_char_hdr]
 
+# Where in the file the NVHDR value is
+const sac_nvhdr_pos = length(sac_float_hdr) + find(sac_int_hdr .== :nvhdr)[1] - 1
+
 # Composite type for SAC evenly-spaced time series data
 @eval type SACtr
     $([:($(s)::SACFloat) for s in sac_float_hdr]...)
@@ -142,6 +148,57 @@ in seconds, and the number of points in the trace `t`.  Optionally, specify the 
 start time `b` in seconds.
 """ SACtr
 
+
+@eval function SACtr(data::Vector{UInt8}; terse::Bool=false)
+    const len = sac_byte_len
+    const clen = 2*sac_byte_len
+    # Determine endianness and act accordingly
+    nvhdr = reinterpret(SACInt, data[sac_nvhdr_pos*len+1:(sac_nvhdr_pos+1)*len])[1]
+    native = if nvhdr == sac_ver_num
+        true
+    elseif bswap(nvhdr) == sac_ver_num
+        false
+    else
+        error("Array does not appear to be SAC data")
+    end
+    native && machine_is_little_endian && !terse &&
+        info("File '$file' is little-endian; byteswapping")
+    byteswap(x) = native ? x : bswap(x)
+
+    ## Read header
+    # Float part
+    $([:($s = byteswap(reinterpret(SACFloat, data[(($i-1)*len)+1:$i*len])[1])) for (s, i) in zip(sac_float_hdr, 1:length(sac_float_hdr))]...)
+    off = length(sac_float_hdr)*len
+    # Int part
+    $([:($s = byteswap(reinterpret(SACInt, data[(($i-1)*len)+1+off:$i*len+off])[1])) for (s, i) in zip(sac_int_hdr, 1:length(sac_int_hdr))]...)
+    off += length(sac_int_hdr)*len
+    # Boolean part
+    $([:($s = 0 != byteswap(reinterpret(SACInt, data[(($i-1)*len)+1+off:$i*len+off])[1])) for (s, i) in zip(sac_bool_hdr, 1:length(sac_bool_hdr))]...)
+    off += length(sac_bool_hdr)*len
+    # Character part
+    # kevnm header is double length, so split into two then recombine
+    char_sym_list = [sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]]
+    $([:($s = ascii(String(reinterpret(UInt8, data[(($i-1)*clen)+1+off:$i*clen+off])))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
+    kevnm = kevnm1 * kevnm2
+    off += (length(sac_char_hdr) + 1)*clen
+
+    # Create an empty object...
+    trace = SACtr(delta, npts)
+    # ...and fill the headers...
+    $([:(trace.$s = $s) for s in sac_all_hdr]...)
+    # ...then read in the trace
+    for i = 1:npts
+        trace.t[i] = byteswap(reinterpret(SACFloat, data[(i-1)*len+1+off:i*len+off])[1])
+    end
+    update_headers!(trace)
+    trace
+end
+@doc """
+    SACtr(v::Vector{UInt8}) -> s::SACtr
+
+Construct a SACtr instance from a raw array.
+""" SACtr
+
 """
     getindex(A::Array{SACtr}, s::Symbol) -> Array{typeof(A[:].s)}
     A[:s] -> Array{typeof(A[:].s)}
@@ -150,8 +207,8 @@ Return an array of values containing the header with name `s` for the SACtr
 traces.  This allows one to get all the headers values by doing A[:kstnm],
 for example.
 """
-getindex(A::Array{SACtr}, s::Symbol) = Array{typeof(A[1].(s))}([a.(s) for a in A])
-getindex(t::SACtr, s::Symbol) = t.(s) # Also define for single trace for consistency
+getindex(A::Array{SACtr}, s::Symbol) = Array{typeof(getfield(A[1], s))}([getfield(a, s) for a in A])
+getindex(t::SACtr, s::Symbol) = getfield(t, s) # Also define for single trace for consistency
 
 """
     setindex!(A::Array{SACtr}, value, s::Symbol)
@@ -167,20 +224,35 @@ or
     A[:user0] = 1:length(A)
 """
 function setindex!(A::Array{SACtr}, V, s::Symbol)
-    fieldtype = typeof(A[1].(s))
+    fieldtype = typeof(getfield(A[1], s))
     if length(A) == length(V)
         for (a, v) in zip(A, V)
-            a.(s) = convert(fieldtype, v)
+            setfield!(a, s, convert(fieldtype, v))
         end
     elseif length(V) == 1
         for a in A
-            a.(s) = convert(fieldtype, V)
+            setfield!(a, s, convert(fieldtype, V))
         end
     else
         error("Number of header values must be one or the number of traces")
     end
 end
-setindex!(t::SACtr, v, s::Symbol) = t.(s) = v
+setindex!(t::SACtr, v, s::Symbol) = setfield(t, s, v)
+
+"""
+    (==)(a::SACtr, b::SACtr) -> ::Bool
+
+Return `true` if the traces `a` and `b` are equal (that is, have all fields the same),
+and `false` otherwise.
+"""
+function (==)(a::SACtr, b::SACtr)
+    for f in fieldnames(a)
+        if getfield(a, f) != getfield(b, f)
+            return false
+        end
+    end
+    true
+end
 
 @eval function read(file; swap::Bool=true, terse::Bool=false)
     const len = sac_byte_len
@@ -194,7 +266,9 @@ setindex!(t::SACtr, v, s::Symbol) = t.(s) = v
     byteswap(x) = native ? x : bswap(x)
 
     ## Read data
-    data = readbytes(open(file, "r"))
+    data = open(file, "r") do f
+        Base.read(f)
+    end
 
     ## Read header
     # Float part
@@ -209,7 +283,7 @@ setindex!(t::SACtr, v, s::Symbol) = t.(s) = v
     # Character part
     # kevnm header is double length, so split into two then recombine
     char_sym_list = [sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]]
-    $([:($s = ascii(reinterpret(UInt8, data[(($i-1)*clen)+1+off:$i*clen+off]))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
+    $([:($s = ascii(String(reinterpret(UInt8, data[(($i-1)*clen)+1+off:$i*clen+off])))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
     kevnm = kevnm1 * kevnm2
     off += (length(sac_char_hdr) + 1)*clen
 
@@ -242,14 +316,15 @@ The heuristic is thus: native-endian files have bytes 305:308 which are
 a representation of the value `6`.  `6` is the current magic SAC file version number,
 hard-coded into the routine.
 """
-function file_is_native_endian(file)
-    const nvhdr_pos = length(sac_float_hdr) + find(sac_int_hdr .== :nvhdr)[1] - 1
+function file_is_native_endian(file::Compat.String)
     nvhdr = try
-        reinterpret(SACInt, readbytes(
-            open(file, "r"), nvhdr_pos*sac_byte_len + sac_byte_len)[end-sac_byte_len+1:end])[1]
-    catch
+        d = open(file, "r") do f
+            Compat.readbytes(f, (sac_nvhdr_pos + 1)*sac_byte_len)
+	    end
+        reinterpret(SACInt, d[end-sac_byte_len+1:end])[1]
+    catch err
         error("SAC.file_is_native_endian: Cannot open file '$file' for reading " *
-            "or file is not the correct type")
+	      "or file is not the correct type (error $err)")
     end
     if nvhdr == sac_ver_num
         return true
@@ -262,7 +337,7 @@ function file_is_native_endian(file)
 end
 
 
-@eval function write(s::SACtr, file::ASCIIString; byteswap=sac_force_swap)
+@eval function write(s::SACtr, file::String; byteswap=sac_force_swap)
     # Write a SAC composed type to file
     # Call with byteswap=true to write non-native-endian files
     f = open(file, "w")
@@ -272,7 +347,7 @@ end
         w(F::IOStream, x) = Base.write(F, x)
     end
     # Define routine to shorten/pad character headers
-    w(F::IOStream, x::ASCIIString, maxlen::Integer) =
+    w(F::IOStream, x::String, maxlen::Integer) =
         Base.write(F, x[1:minimum((length(x),maxlen))]*" "^(maximum((0,maxlen-length(x)))))
     # Write header
     $([:(w(f, s.$s)) for s in [sac_float_hdr; sac_int_hdr]]...)
@@ -296,7 +371,7 @@ Set `byteswap` to `true` to force writing in non-native-endian format; set to `f
 to write native-endian files.  The default is to write bigendian format.
 """ -> write
 
-function write(s::Array{SACtr}, file::Array{ASCIIString}; args...)
+function write(s::Array{SACtr}, file::Array{String}; args...)
     length(s) == length(file) || error("SAC.write: Arrays must be same length")
     for i = 1:length(s)
         write(s[i], file[i]; args...)
@@ -339,7 +414,7 @@ If `echo` is false, do not show which files are being read.
 
 Returns an array of SACtr types `A`, and an array of file names `files`.
 """ ->
-function read_wild(pat::ASCIIString, dir::ASCIIString="."; echo::Bool=true)
+function read_wild(pat::String, dir::String="."; echo::Bool=true)
     # Return an array of SACtr types, and an array which gives the file path
     # for each trace.  Return nothing if there are no files.
     # Defaults to current directory.
@@ -369,7 +444,7 @@ Return some sample SAC data
 function sample()
     # Return some sample data, which is what you get when calling `fg seis' in SAC
     file = joinpath(dirname(@__FILE__()), "../data/seis.sac")
-    return read(file)
+    return SAC.read(file)
 end
 
 
@@ -564,7 +639,7 @@ Set number of poles with `npoles`.\n
 `passes` may be 1 (forward) or 2 (forward and reverse).
 """ ->
 function bandpass!(s::SACtr, c1::Number, c2::Number;
-        ftype::ASCIIString="butterworth", npoles::Integer=sac_npoles,
+        ftype::String="butterworth", npoles::Integer=sac_npoles,
         passes::Integer=sac_passes)
                   # tranbw::Number=0.3, atten::Number=30)
     # Perform a bandpass on the trace, using either a Butterworth, Bessel or
@@ -574,7 +649,7 @@ function bandpass!(s::SACtr, c1::Number, c2::Number;
     #    c1::Number   : Low corner / Hz
     #    c2::Number   : High corner / Hz
     # INPUT (OPTIONAL):
-    #    type::ASCIIString : Name of type.  Unambiguous short forms for the
+    #    type::String : Name of type.  Unambiguous short forms for the
     #                        following are acceptable:
     #                        [bu]tterworth [Default]
     #   npoles::Int       : Number of poles (1-10) [Default 2]
@@ -608,7 +683,7 @@ Set number of poles with `npoles`.\n
 `passes` may be 1 (forward) or 2 (forward and reverse).
 """ ->
 function highpass!(s::SACtr, c::Number;
-        ftype::ASCIIString="butterworth", npoles::Integer=sac_npoles,
+        ftype::String="butterworth", npoles::Integer=sac_npoles,
         passes::Integer=sac_passes)
     # Perform a highpass on the trace, in-place.
     response = DSP.Highpass(c; fs=1./s.delta)
@@ -636,7 +711,7 @@ Set number of poles with `npoles`.\n
 `passes` may be 1 (forward) or 2 (forward and reverse).
 """ ->
 function lowpass!(s::SACtr, c::Number;
-        ftype::ASCIIString="butterworth", npoles::Integer=sac_npoles,
+        ftype::String="butterworth", npoles::Integer=sac_npoles,
         passes::Integer=sac_passes)
     # Perform a lowpass on the trace, in-place.
     response = DSP.Lowpass(c; fs=1./s.delta)
@@ -783,10 +858,10 @@ function apply_filter!(s::SACtr, f, passes::Integer)
     return
 end
 
-function get_filter_prototype(ftype::ASCIIString, npoles::Integer)
+function get_filter_prototype(ftype::String, npoles::Integer)
     # Return a filter prototype for use with filtering
     # INPUT:
-    #    type::ASCIIString : Name of type.  Unambiguous short forms for the
+    #    type::String : Name of type.  Unambiguous short forms for the
     #                        following are acceptable:
     #                        [bu]tterworth [Default]
     #                       [be]ssel
