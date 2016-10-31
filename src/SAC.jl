@@ -621,12 +621,9 @@ end
 @doc """
     time(::SACtr) -> t
 
-Return an array `t` which contains the time for each sample of the SAC trace.
+Return a FloatRange `t` which contains the times for each sample of the SAC trace.
 """ ->
-function time(s::SACtr)
-    # Return an array containing the times for each sample
-    return s.b + [0:s.npts-1;]*s.delta
-end
+time(s::SACtr) = s.b + (0:s.npts-1)*s.delta
 
 @doc """
     bandpass!(::SACtr, c1, c2; ftype=\"butterworth\", npoles=2, passes=1)
