@@ -140,12 +140,16 @@ const sac_nvhdr_pos = length(sac_float_hdr) + find(sac_int_hdr .== :nvhdr)[1] - 
     end
 end
 @doc """
-    SACtr(delta, npts, b=0.)
+    SACtr(delta, npts, b=0.) -> ::SACtr
 
 Construct a composite type holding an evenly-spaced SAC time-series trace, where the trace
 is accessed through the field name `t`.  Supply the constant sampling interval `delta`
 in seconds, and the number of points in the trace `t`.  Optionally, specify the trace
 start time `b` in seconds.
+
+    SACtr(d::Vector{UInt8}) -> ::SACtr
+
+Construct a SACtr from a raw array of bytes representing some data in SAC format.
 """ SACtr
 
 
@@ -162,7 +166,7 @@ start time `b` in seconds.
         error("Array does not appear to be SAC data")
     end
     native && machine_is_little_endian && !terse &&
-        info("File '$file' is little-endian; byteswapping")
+        info("Data are little-endian; byteswapping")
     byteswap(x) = native ? x : bswap(x)
 
     ## Read header
@@ -193,11 +197,6 @@ start time `b` in seconds.
     update_headers!(trace)
     trace
 end
-@doc """
-    SACtr(v::Vector{UInt8}) -> s::SACtr
-
-Construct a SACtr instance from a raw array.
-""" SACtr
 
 """
     getindex(A::Array{SACtr}, s::Symbol) -> Array{typeof(A[:].s)}
