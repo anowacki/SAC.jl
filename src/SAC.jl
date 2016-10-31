@@ -728,17 +728,22 @@ lp! = lowpass!
 
 @doc """
     rotate_through!(::SACtr, ::SACtr, phi)
+    rotate_through!(::Array{SACtr}, phi)
 
-Given two SAC traces which are horizontal and orthgonal, rotate them clockwise
-by `phi`° about the vertical axis.  This is a reference frame transformation
-(passive rotation) and hence particle motion will appear to rotate
-anti-clockwise.
+In the first form, with two SAC traces which are horizontal and orthgonal, rotate
+them *clockwise* by `phi`° about the vertical axis.
+
+In the second form, rotate each sequential pair of traces (i.e., indices 1 and 2,
+3 and 4, ..., end-1 and end).
+
+This is a reference frame transformation (passive rotation) and hence particle motion
+will appear to rotate anti-clockwise.
 """ ->
 function rotate_through!(s1::SACtr, s2::SACtr, phi)
     # Rotate two orthogonal horizontal traces clockwise by ('through') phi (degrees).
     # This has the effect of changing the reference frame (passive rotation),
     # and hence the particle motion appears to rotate anti-clockwise.
-    if mod(s2.cmpaz - s1.cmpaz, 180.) != 90.
+    if !(mod(abs(s2.cmpaz - s1.cmpaz), SACFloat(180)) ≈ SACFloat(90))
         error("SAC.rotate_through!: traces must be orthogonal")
     elseif s1.npts != s2.npts
         error("SAC.rotate_through!: traces must be same length")
@@ -751,18 +756,17 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
     for i = 1:s1.npts
         (s1.t[i], s2.t[i]) = R*[s1.t[i]; s2.t[i]]
     end
-    update_headers!(s1)
-    s1.cmpaz = mod(s1.cmpaz + phi, 360.)
-    s1.kcmpnm = sacstring(s1.cmpaz)
-    update_headers!(s2)
-    s2.cmpaz = mod(s2.cmpaz + phi, 360.)
-    s2.kcmpnm = sacstring(s2.cmpaz)
+    for t in (s1, s2)
+        setfield!(t, :cmpaz, SAC.SACFloat(mod(getfield(t, :cmpaz) + phi, 360.)))
+        setfield!(t, :kcmpnm, SAC.sacstring(getfield(t, :cmpaz)))
+        SAC.update_headers!(t)
+    end
     return
 end
 
 function rotate_through!(a::Array{SACtr}, phi)
     length(a)%2 != 0 && error("SAC.rotate_through!: Array of traces must be a multiple of two long")
-    for i = 1:length(a)/2
+    for i = 1:length(a)÷2
         rotate_through!(a[2*i - 1], a[2*i], phi)
     end
 end
