@@ -24,6 +24,7 @@ export
     fft,
     highpass!,
     hp!,
+    interpolate!,
     lp!,
     lowpass!,
     read_wild,
@@ -609,6 +610,7 @@ function update_headers!(s::SACtr)
     s.depmax = maximum(s.t)
     s.depmin = minimum(s.t)
     s.depmen = mean(s.t)
+    s.e = s.b + s.delta*(s.npts - 1)
     return
 end
 
@@ -844,6 +846,48 @@ end
 divide!(s::SACtr, value) = divide!([s], value)
 div! = divide!
 
+"""
+    interpolate!(::SACtr, npts=npts)
+    interpolate!(::SACtr, delta=delta)
+    interpolate!(::SACtr, n=n)
+
+Resample a SAC trace by supplying one of three things:
+
+* A new number of samples (`npts`)
+* A new sampling interval (`delta` in seconds)
+* A multiple by which to increase the sampling (`n`)
+
+Interpolation is performed using quadratic splines using the `Dierckx` package.
+"""
+function interpolate!(s::SACtr; npts::Integer=0, delta::Real=0.0, n::Integer=0)
+    isdefined(:Dierckx) || @eval import Dierckx
+    # Calculate new points at which to evaluate time series
+    interp_t = if npts != 0
+        npts >= 0 || error("`npts` cannot be negative")
+        delta = (s.e - s.b)/(npts - 1)
+        s.b + (0:(npts-1))*delta
+    elseif delta != 0.0
+        delta >= 0.0 || error("`delta` cannot be negative")
+        delta < (s.e - s.b) || error("`delta`")
+        times = s.b:delta:s.e
+        npts = length(times)
+        times
+    elseif n != 0
+        n > 0 || error("`n` cannot be negative")
+        npts = (s.npts - 1)*n + 1
+        delta = (s.e - s.b)/(npts - 1)
+        s.b + (0:(npts-1))*delta
+    else
+        error("Must supply one keyword argument of `npts`, `n` or `delta`")
+    end
+    @assert npts == length(interp_t)
+    # Create fit using degree-2 Bsplines
+    spl = Dierckx.Spline1D(SAC.time(s), s.t, k=2)
+    s.t = Dierckx.evaluate(spl, interp_t)
+    s.npts = npts
+    s.delta = delta
+    update_headers!(s)
+end
 
 function apply_filter!(s::SACtr, f, passes::Integer)
         passes < 1 || passes > 2 && error("SAC.apply_filter!: Number of passes must be 1 or 2")
