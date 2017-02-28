@@ -54,8 +54,8 @@ const saccharlen = 8
 # SAC file version number
 const sac_ver_num = SACInt(6)
 # Whether this machine is big- or little endian.  SAC files are meant to be big-endian,
-# so this determines whether a file is native-endian or not.
-const machine_is_little_endian = true
+# so this determines whether a file is 'native-endian' or not.
+const machine_is_little_endian = bits(1)[end] == '1'
 
 # Convert a number into a SACChar
 sacstring(x, maxlen=saccharlen) = sacchar(string(x)[1:minimum((length(string(x)),maxlen))]*" "^(maximum((0,maxlen-length(string(x))))))
@@ -69,8 +69,8 @@ const sac_cnull = "-12345"
 const sac_npoles = 2
 const sac_passes = 1
 
-# For SAC/BRIS, files are always big-endian, so set this to true to swap by default
-const sac_force_swap = true
+# For SAC/BRIS (MacSAC), files are always big-endian, so set this appropriately
+const sac_force_swap = machine_is_little_endian
 
 # Flag for verbosity
 sac_verbose = true
@@ -154,7 +154,7 @@ Construct a SACtr from a raw array of bytes representing some data in SAC format
 """ SACtr
 
 
-@eval function SACtr(data::Vector{UInt8}; terse::Bool=false)
+@eval function SACtr(data::Vector{UInt8}, file=""; swap::Bool=true, terse::Bool=false)
     const len = sac_byte_len
     const clen = 2*sac_byte_len
     # Determine endianness and act accordingly
@@ -166,6 +166,9 @@ Construct a SACtr from a raw array of bytes representing some data in SAC format
     else
         error("Array does not appear to be SAC data")
     end
+    native && machine_is_little_endian && !swap &&
+        error("Data are little-endian but `swap` is `false`.  Not attempting to swap bytes" *
+            (file!="" ? " for file '$file'." : "."))
     native && machine_is_little_endian && !terse &&
         info("Data are little-endian; byteswapping")
     byteswap(x) = native ? x : bswap(x)
@@ -255,48 +258,11 @@ function (==)(a::SACtr, b::SACtr)
 end
 
 @eval function read(file; swap::Bool=true, terse::Bool=false)
-    const len = sac_byte_len
-    const clen = 2*sac_byte_len
-    # Determine endianness and act accordingly
-    native = file_is_native_endian(file)
-    native && machine_is_little_endian && !swap &&
-        error("File '$file' is little-endian, but `swap` is `false`; use set to `true` to auto-byteswap")
-    native && machine_is_little_endian && !terse &&
-        info("File '$file' is little-endian; byteswapping")
-    byteswap(x) = native ? x : bswap(x)
-
     ## Read data
     data = open(file, "r") do f
         Base.read(f)
     end
-
-    ## Read header
-    # Float part
-    $([:($s = byteswap(reinterpret(SACFloat, data[(($i-1)*len)+1:$i*len])[1])) for (s, i) in zip(sac_float_hdr, 1:length(sac_float_hdr))]...)
-    off = length(sac_float_hdr)*len
-    # Int part
-    $([:($s = byteswap(reinterpret(SACInt, data[(($i-1)*len)+1+off:$i*len+off])[1])) for (s, i) in zip(sac_int_hdr, 1:length(sac_int_hdr))]...)
-    off += length(sac_int_hdr)*len
-    # Boolean part
-    $([:($s = 0 != byteswap(reinterpret(SACInt, data[(($i-1)*len)+1+off:$i*len+off])[1])) for (s, i) in zip(sac_bool_hdr, 1:length(sac_bool_hdr))]...)
-    off += length(sac_bool_hdr)*len
-    # Character part
-    # kevnm header is double length, so split into two then recombine
-    char_sym_list = [sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]]
-    $([:($s = ascii(String(reinterpret(UInt8, data[(($i-1)*clen)+1+off:$i*clen+off])))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
-    kevnm = kevnm1 * kevnm2
-    off += (length(sac_char_hdr) + 1)*clen
-
-    # Create an empty object...
-    trace = SACtr(delta, npts)
-    # ...and fill the headers...
-    $([:(trace.$s = $s) for s in sac_all_hdr]...)
-    # ...then read in the trace
-    for i = 1:npts
-        trace.t[i] = byteswap(reinterpret(SACFloat, data[(i-1)*len+1+off:i*len+off])[1])
-    end
-    update_headers!(trace)
-    trace
+    SACtr(data, file, swap=swap, terse=terse)
 end
 @doc """
     read(file; swap=true, terse=false) -> s::SACtr
@@ -336,39 +302,32 @@ function file_is_native_endian(file::Compat.String)
     end
 end
 
+"Write floats or integers either swapped or native-endian"
+_write_swap(swap::Bool, F::IOStream, x) = Base.write(F, swap ? Base.bswap.(x) : x)
+"Write a String as a SAC string of the correct length, padded with ' 's"
+_write_string(F::IOStream, x::String, maxlen::Integer) =
+    Base.write(F, x[1:min(length(x),maxlen)]*" "^(max(0,maxlen-length(x))))
 
-@eval function write(s::SACtr, file::String; byteswap=sac_force_swap)
-    # Write a SAC composed type to file
-    # Call with byteswap=true to write non-native-endian files
-    f = open(file, "w")
-    if byteswap
-        w(F::IOStream, x) = Base.write(F, Base.bswap(x))
-    else
-        w(F::IOStream, x) = Base.write(F, x)
+@eval function write(s::SACtr, file; byteswap=sac_force_swap)
+    open(file, "w") do f
+        # Write header
+        $([:(_write_swap(byteswap, f, s.$s)) for s in [sac_float_hdr; sac_int_hdr]]...)
+        $([:(_write_swap(byteswap, f, SACInt(s.$s))) for s in sac_bool_hdr]...)
+        # No byte-swapping needed for characters, but pad them to the correct length
+        _write_string(f, s.kstnm, saccharlen)
+        _write_string(f, s.kevnm, 2*saccharlen)
+        $([:(_write_string(f, s.$s, saccharlen)) for s in sac_char_hdr[3:end]]...)
+        # Trace
+        _write_swap(byteswap, f, s.t)
     end
-    # Define routine to shorten/pad character headers
-    w(F::IOStream, x::String, maxlen::Integer) =
-        Base.write(F, x[1:minimum((length(x),maxlen))]*" "^(maximum((0,maxlen-length(x)))))
-    # Write header
-    $([:(w(f, s.$s)) for s in [sac_float_hdr; sac_int_hdr]]...)
-    $([:(w(f, SACInt(s.$s))) for s in sac_bool_hdr]...)
-    # No byte-swapping needed for characters, but pad them to the correct length
-    w(f, s.kstnm, saccharlen)
-    w(f, s.kevnm, 2*saccharlen)
-    $([:(w(f, s.$s, saccharlen)) for s in sac_char_hdr[3:end]]...)
-    # Trace
-    for i = 1:s.npts
-        w(f, s.t[i])
-    end
-    close(f)
 end
 @doc """
     write(s::SACtr, file; byteswap)
     write(S::Array{SACtr}, files; byteswap)
 
 Write a SAC trace `s` to `file`, or a set of traces `S` to a set of files `files`.
-Set `byteswap` to `true` to force writing in non-native-endian format; set to `false`
-to write native-endian files.  The default is to write bigendian format.
+Set `byteswap` to `false` to force writing in native-endian format; set to `true`
+to write bigendian files (MacSAC type).  The default is to write bigendian format.
 """ -> write
 
 function write(s::Array{SACtr}, file::Array{String}; args...)
