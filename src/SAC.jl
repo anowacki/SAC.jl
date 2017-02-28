@@ -10,9 +10,6 @@ __precompile__()
 import DSP
 import Glob
 import Base: ==, copy, getindex, fft, setindex!, time, write
-import Compat
-
-const String = Compat.String
 
 export
     SACtr,
@@ -257,20 +254,19 @@ function (==)(a::SACtr, b::SACtr)
     true
 end
 
-@eval function read(file; swap::Bool=true, terse::Bool=false)
-    ## Read data
-    data = open(file, "r") do f
-        Base.read(f)
-    end
-    SACtr(data, file, swap=swap, terse=terse)
-end
-@doc """
+"""
     read(file; swap=true, terse=false) -> s::SACtr
 
 Return the SAC trace as read from file `file` as a `SACtr` object.  If `swap` is false,
 then auto-byteswapping is not performed and an error is returned if the file is not
 of the assumed endianness.  Autoswapping is reported unless `terse` is `true`.
-""" read
+"""
+function read(file; swap::Bool=true, terse::Bool=false)
+    data = open(file, "r") do f
+        Base.read(f)
+    end
+    SACtr(data, file, swap=swap, terse=terse)
+end
 
 """
     file_is_native_endian(file)
@@ -282,15 +278,15 @@ The heuristic is thus: native-endian files have bytes 305:308 which are
 a representation of the value `6`.  `6` is the current magic SAC file version number,
 hard-coded into the routine.
 """
-function file_is_native_endian(file::Compat.String)
+function file_is_native_endian(file::String)
     nvhdr = try
         d = open(file, "r") do f
-            Compat.readbytes(f, (sac_nvhdr_pos + 1)*sac_byte_len)
+            seek(f, sac_nvhdr_pos*sac_byte_len)
+            reinterpret(SACInt, Base.read(f, sac_byte_len))[1]
 	    end
-        reinterpret(SACInt, d[end-sac_byte_len+1:end])[1]
     catch err
         error("SAC.file_is_native_endian: Cannot open file '$file' for reading " *
-	      "or file is not the correct type (error $err)")
+            "or file is not the correct type (error $err)")
     end
     if nvhdr == sac_ver_num
         return true
