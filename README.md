@@ -1,7 +1,7 @@
 # SAC.jl
 
 [![Build Status](https://img.shields.io/travis/anowacki/SAC.jl.svg?style=flat-square&label=linux)](https://travis-ci.org/anowacki/SAC.jl)
-[![Build status](https://img.shields.io/appveyor/ci/anowacki/sac-jl.svg?style=flat-square&label=windows)](https://ci.appveyor.com/project/anowacki/sac-jl/branch/master)
+[![Build status](https://img.shields.io/appveyor/ci/AndyNowacki/sac-jl.svg?style=flat-square&label=windows)](https://ci.appveyor.com/project/AndyNowacki/sac-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/anowacki/SAC.jl/badge.svg?branch=master)](https://coveralls.io/github/anowacki/SAC.jl?branch=master)
 
 ## What is SAC.jl?
