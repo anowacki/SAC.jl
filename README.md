@@ -1,5 +1,8 @@
 # SAC.jl
 
+[![Build Status](https://img.shields.io/travis/anowacki/SAC.jl.svg?style=flat-square&label=linux)](https://travis-ci.org/anowacki/SAC.jl)
+[![Coverage Status](https://coveralls.io/repos/github/anowacki/SAC.jl/badge.svg?branch=master)](https://coveralls.io/github/anowacki/SAC.jl?branch=master)
+
 ## What is SAC.jl?
 A [Julia](http://julialang.org) package for dealing with seismic data in the
 [SAC](http://ds.iris.edu/files/sac-manual/manual/file_format.html) format, and
