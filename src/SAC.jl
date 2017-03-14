@@ -728,6 +728,20 @@ function rotate_through!(a::Array{SACtr}, phi)
     end
 end
 
+"""
+    rotate_through(s1::SACtr, s2::SACtr, phi) -> new_s1, new_s2
+
+Copying version of `rotate_through` which returns modified versions of the traces
+in `s1` and `s2`, leaving the originals unaltered.  See docs of `rotate_through!` for details.
+"""
+function rotate_through(s1::SACtr, s2::SACtr, phi)
+    s1_new, s2_new = deepcopy(s1), deepcopy(s2)
+    rotate_through!(s2, s2, phi)
+    s1_new, s2_new
+end
+rotate_through(a::Array{SACtr}, phi) =
+    rotate_through(@view(s1[1:2:end]), @view(s2[2:2:end]), phi)
+
 @doc """
     tshift!(::SACtr, tshift; wrap=true)
 
@@ -885,6 +899,35 @@ function get_filter_prototype(ftype::String, npoles::Integer)
         error("SAC.get_filter_prototype: unrecognised filter type '$ftype'")
     end
     return prototype
+end
+
+# Build all copying routines
+for (name, abbrev) in zip(
+        (:bandpass!, :cut!, :envelope!, :highpass!, :lowpass!, :interpolate!,
+         :rmean!, :rtrend!, :taper!, :tshift!),
+        (:bp!, nothing, nothing, :hp!, :lp!, nothing, nothing, nothing, nothing))
+    new_name = Symbol(string(name)[1:end-1])
+    new_abbrev = Symbol(string(abbrev)[1:end-1])
+    @eval begin
+        function ($new_name)(s, args...; kwargs...)
+            s_new = deepcopy(s)
+            $(name)(s_new, args...; kwargs...)
+            s_new
+        end
+        @doc """
+            $($new_name)(s::Union{SACtr,Array{SACtr}}, args...; kwargs...) -> s_new
+
+        Copying version of `$($name)` which returns modified version(s) of the trace(s)
+        in `s`, leaving the originals unaltered.  See docs of `$($name)` for details.
+        """ $new_name
+        export $new_name
+    end
+    if abbrev != nothing
+        @eval begin
+            $new_abbrev = $new_name
+            export $new_name, $new_abbrev
+        end
+    end
 end
 
 end # module SAC
