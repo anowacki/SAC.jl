@@ -17,6 +17,8 @@ export
     bp!,
     copy,
     cut!,
+    diff!,
+    differentiate!,
     envelope!,
     fft,
     highpass!,
@@ -448,6 +450,68 @@ function cut!{B<:Real,E<:Real}(a::Array{SACtr}, b::Array{B}, e::Array{E})
         SAC.cut!(s, beg, en)
     end
 end
+
+"""
+    differentiate!(s::SACtr, npoints::Integer=2)
+
+Differentiate the SAC trace `s`, replacing it with its time derivative `dsdt`.
+Select the mode of numerical differentiation with `npoints`.
+
+### Available algorithms
+
+- `npoints == 2`: Two-point.  `dsdt.t[i] = (s.t[i+1] - s.t[i])/s.delta`.
+  Non-central difference, so `s.b` is increased by half `s.delta`.  `npts` is
+  reduced by 1.
+- `npoints == 3`: Three-point. `dsdt.t[i] = (s.t[i+1] - s.t[i-1])/(2 * s.delta)`.
+  Central difference.  `s.b` is increased by `s.delta`; `npts` reduced by 2.
+- `npoints == 3`: Five-point. `dsdt.t[i] =
+  (2/3)*(s.t[i+1] - s.t[i-1])/s.delta - (1/12)*(s.t[i+2] - s.t[i-2])/s.delta`.
+  Central difference.  `s.b` is increased by `2s.delta`; `npts` reduced by 4.
+"""
+function differentiate!(s::SACtr, npoints::Integer=2)
+    npoints in (2, 3, 5) ||
+        throw(ArgumentError("`npoints` cannot be $(npoints); must be one of (2, 3, 5)"))
+    if npoints == 2
+        t = Vector{SACFloat}(s.npts - 1)
+        @inbounds for i in 1:(s.npts-1)
+            s.t[i] = (s.t[i+1] - s.t[i])/s.delta
+        end
+        pop!(s.t)
+        s.npts -= 1
+        s.b += s.delta/2
+    elseif npoints == 3
+        @inbounds for i in 2:(s.npts-1)
+            s.t[i-1] = (s.t[i+1] - s.t[i-1])/(2*s.delta)
+        end
+        pop!(s.t); pop!(s.t)
+        s.npts -= 2
+        s.b += s.delta
+    elseif npoints == 5
+        t1 = (s.t[3] - s.t[1])/(2*s.delta)
+        t2 = (s.t[end] - s.t[end-2])/(2*s.delta)
+        d1 = 2/(3*s.delta)
+        d2 = 1/(12*s.delta)
+        t_minus_2 = s.t[1]
+        t_minus_1 = s.t[2]
+        t = s.t[3]
+        t_plus_1 = s.t[4]
+        @inbounds for i in 2:(s.npts-3)
+            t_plus_2 = s.t[i+3]
+            s.t[i] = d1*(t_plus_1 - t_minus_1) - d2*(t_plus_2 - t_minus_2)
+            t_minus_2 = t_minus_1
+            t_minus_1 = t
+            t = t_plus_1
+            t_plus_1 = t_plus_2
+        end
+        s.t[1] = t1
+        s.t[end-2] = t2
+        pop!(s.t); pop!(s.t)
+        s.npts -= 2
+        s.b += s.delta
+    end
+    update_headers!(s)
+end
+diff! = differentiate!
 
 @doc """
     fft(s::SACtr) -> f, S
@@ -903,9 +967,9 @@ end
 
 # Build all copying routines
 for (name, abbrev) in zip(
-        (:bandpass!, :cut!, :envelope!, :highpass!, :lowpass!, :interpolate!,
+        (:bandpass!, :cut!, :differentiate!, :envelope!, :highpass!, :lowpass!, :interpolate!,
          :rmean!, :rtrend!, :taper!, :tshift!),
-        (:bp!, nothing, nothing, :hp!, :lp!, nothing, nothing, nothing, nothing))
+        (:bp!, nothing, :diff!, nothing, :hp!, :lp!, nothing, nothing, nothing, nothing))
     new_name = Symbol(string(name)[1:end-1])
     new_abbrev = Symbol(string(abbrev)[1:end-1])
     @eval begin

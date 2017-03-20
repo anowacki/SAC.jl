@@ -1,0 +1,8 @@
+* Create the test data used for the tests of the function `differentiate`
+do points list two three five
+    fg seis
+    dif $points$
+    setbb file "test_diff_data_points_$points$.sac"
+    w %file%
+enddo
+quit
