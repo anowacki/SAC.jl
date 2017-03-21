@@ -9,7 +9,7 @@ __precompile__()
 
 import DSP
 import Glob
-import Base: ==, copy, getindex, fft, setindex!, time, write
+import Base: ==, copy, diff, getindex, fft, setindex!, time, write
 
 export
     SACtr,
@@ -513,6 +513,39 @@ function differentiate!(s::SACtr, npoints::Integer=2)
 end
 diff! = differentiate!
 
+"""
+    integrate!(s::SACtr, method=:trapezium)
+
+Replace `s` with its time-integral.  This is done by default using the trapezium rule.
+Use `method=:rectangle` to use the rectangle rule.
+
+If `method==:trapezium` (the default), then `s.npts` is reduced by one and `s.b` is
+increased by `s.delta/2`.
+"""
+function integrate!(s::SACtr, method::Symbol=:trapezium)
+    method in (:trapezium, :rectangle) ||
+        throw(ArgumentError("`methodod` must by one of `:trapezium` or `:rectangle` " *
+                            "(got '$method')"))
+    if method == :trapezium
+        total = zero(s.t[1])
+        h = s.delta/2
+        @inbounds for i in 1:(s.npts-1)
+            total += h*(s.t[i] + s.t[i+1])
+            s.t[i] = total
+        end
+        s.npts -= 1
+        pop!(s.t)
+        s.b += s.delta/2
+    elseif method == :rectangle
+        h = s.delta
+        @inbounds for i in 2:s.npts
+            s.t[i] = h*s.t[i] + s.t[i-1]
+        end
+    end
+    update_headers!(s)
+end
+int! = integrate!
+
 @doc """
     fft(s::SACtr) -> f, S
 
@@ -967,9 +1000,9 @@ end
 
 # Build all copying routines
 for (name, abbrev) in zip(
-        (:bandpass!, :cut!, :differentiate!, :envelope!, :highpass!, :lowpass!, :interpolate!,
-         :rmean!, :rtrend!, :taper!, :tshift!),
-        (:bp!, nothing, :diff!, nothing, :hp!, :lp!, nothing, nothing, nothing, nothing))
+        (:bandpass!, :cut!, :differentiate!, :envelope!, :highpass!, :lowpass!, :integrate!,
+         :interpolate!, :rmean!, :rtrend!, :taper!, :tshift!),
+        (:bp!, nothing, :diff!, nothing, :hp!, :lp!, :int!, nothing, nothing, nothing, nothing))
     new_name = Symbol(string(name)[1:end-1])
     new_abbrev = Symbol(string(abbrev)[1:end-1])
     @eval begin

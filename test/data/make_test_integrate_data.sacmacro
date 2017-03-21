@@ -1,0 +1,8 @@
+do method list trapezoidal rectangular
+    fg seis
+    rmean
+    int $method$
+    setbb file "test_integrate_data_method_$method$.sac"
+    w %file%
+enddo
+quit
