@@ -9,6 +9,7 @@ __precompile__()
 
 import DSP
 import Glob
+import GreatCircle
 import Base: ==, copy, diff, getindex, fft, setindex!, time, write
 
 export
@@ -23,6 +24,7 @@ export
     fft,
     highpass!,
     hp!,
+    integrate!,
     interpolate!,
     lp!,
     lowpass!,
@@ -198,6 +200,7 @@ Construct a SACtr from a raw array of bytes representing some data in SAC format
         trace.t[i] = byteswap(reinterpret(SACFloat, data[(i-1)*len+1+off:i*len+off])[1])
     end
     update_headers!(trace)
+    any([trace.gcarc, trace.az, trace.baz] .== sac_rnull) && update_great_circle!(trace)
     trace
 end
 
@@ -239,7 +242,10 @@ function setindex!(A::Array{SACtr}, V, s::Symbol)
         error("Number of header values must be one or the number of traces")
     end
 end
-setindex!(t::SACtr, v, s::Symbol) = setfield(t, s, v)
+function setindex!(t::SACtr, v, s::Symbol)
+    setfield!(t, s, convert(typeof(getfield(t, s)), v))
+    s in (:evlo, :evla, :stlo, :stla) && update_great_circle!(t)
+end
 
 """
     (==)(a::SACtr, b::SACtr) -> ::Bool
@@ -997,6 +1003,37 @@ function get_filter_prototype(ftype::String, npoles::Integer)
     end
     return prototype
 end
+
+"Earth elliposoid semi-axes in WGS84"
+const earth_r_major_WGS84 = 6378137.0000
+const earth_r_minor_WGS84 = 6356752.3142
+"Flattening of the Earth in WGS84"
+const f_WGS84 = (earth_r_major_WGS84 - earth_r_minor_WGS84)/earth_r_major_WGS84
+
+"""
+    _great_circle(lon0, lat0, lon1, lat1, f=f_WGS84) -> gcarc, az, baz
+
+Return the great-circle distance, `gcarc`, forward azimuth `az` and backazimuth `baz`
+between two points, all specified in degrees.
+"""
+function _great_circle(lon0, lat0, lon1, lat1, f=f_WGS84)
+    lon0, lat0, lon1, lat1 = Float64(lon0), Float64(lat0), Float64(lon1), Float64(lat1)
+    gcarc, az, baz = GreatCircle.vincentydist(f, 1.0, deg2rad(lat0), deg2rad(lon0),
+                                              deg2rad(lat1), deg2rad(lon1))
+    rad2deg(gcarc), rad2deg(az), rad2deg(baz)
+end
+
+"""
+    update_great_circle!(s::SACtr)
+
+If all headers `evlo`, `evla`, `stlo` and `stla` are set, update the values of
+`az`, `baz` and `gcarc`.
+"""
+function update_great_circle!(s::SACtr)
+    any([s.evlo, s.evla, s.stlo, s.stla] .== sac_rnull) && return
+    s.gcarc, s.az, s.baz = _great_circle(s.evlo, s.evla, s.stlo, s.stla)
+end
+
 
 # Build all copying routines
 for (name, abbrev) in zip(
