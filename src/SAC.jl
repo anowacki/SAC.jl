@@ -661,7 +661,7 @@ function taper!(s::SACtr, width=0.05, form=:hanning::Symbol)
     SAC.update_headers!(s)
     return
 end
-taper!(S::Array{SACtr}, width=0.05, form=:hamming::Symbol) = for s in S taper!(s, width, form) end
+taper!(S::Array{SACtr}, width=0.05, form::Symbol=:hamming) = for s in S taper!(s, width, form) end
 
 function update_headers!(s::SACtr)
     # Update headers which are automatically calculated from the trace
@@ -1036,10 +1036,27 @@ end
 
 
 # Build all copying routines
-for (name, abbrev) in zip(
-        (:bandpass!, :cut!, :differentiate!, :envelope!, :highpass!, :lowpass!, :integrate!,
-         :interpolate!, :rmean!, :rtrend!, :taper!, :tshift!),
-        (:bp!, nothing, :diff!, nothing, :hp!, :lp!, :int!, nothing, nothing, nothing, nothing))
+"""Dict with keys given by name of each function to have a copying version.
+   Where an abbreviated version exists, that is given as the value; otherwise
+   the value is `nothing`"""
+const copying_funcs = Dict(
+    :add! => nothing,
+    :bandpass! => :bp!,
+    :cut! => nothing,
+    :differentiate! => :diff!,
+    :divide! => :div!,
+    :envelope! => nothing,
+    :highpass! => :hp!,
+    :integrate! => :int!,
+    :interpolate! => nothing,
+    :lowpass! => :lp!,
+    :multiply! => :mul!,
+    :rmean! => nothing,
+    :rtrend! => nothing,
+    :taper! => nothing,
+    :tshift! => nothing,
+    )
+for (name, abbrev) in copying_funcs
     new_name = Symbol(string(name)[1:end-1])
     new_abbrev = Symbol(string(abbrev)[1:end-1])
     @eval begin
