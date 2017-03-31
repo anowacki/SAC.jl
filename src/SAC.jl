@@ -889,7 +889,7 @@ envelope!(s::SACtr) = envelope!([s])
 Multiply the values in a SAC trace by `value`
 """ ->
 function multiply!(a::Array{SACtr}, val)
-    for s in a s.t[:] = s.t[:]*val end
+    for s in a s.t[:] = s.t[:].*val end
     update_headers!(a)
 end
 multiply!(s::SACtr, val) = multiply!([s], val)
@@ -901,7 +901,7 @@ mul! = multiply!
 Add a constant value to a SAC trace
 """ ->
 function add!(a::Array{SACtr}, val)
-    for s in a s.t[:] = s.t[:] + val end
+    for s in a s.t[:] = s.t[:] .+ val end
     update_headers!(a)
 end
 add!(s::SACtr, val) = add!([s], val)
