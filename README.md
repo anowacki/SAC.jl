@@ -169,15 +169,23 @@ search: bandpass!
 Documentation is a work in progress, but all useful commands are documented.
 To see the list of commands, check the code, or in the REPL type `SAC.` then
 press tab a couple of times to see all the module methods and variables.
-Calling up the interactive help with give a useful description of each.
+Calling up the interactive help will give a useful description of each.
 
 
 ## Dependencies
 - [Glob.jl](https://github.com/vtjnash/Glob.jl)
 - [DSP.jl](https://github.com/JuliaDSP/DSP.jl)
+- [GreatCircle.jl](https://github.com/acrosby/GreatCircle.jl)
 
-Install these using `Pkg.add("Glob"); Pkg.add("DSP")` before `using SAC`.
+Install these using by doing
+```julia
+Pkg.add("Glob")
+Pkg.add("DSP")
+Pkg.clone("https://github.com/anowacki/GreatCircle.jl", "an/precompile")
+```
 
+Note that we need a version of GreatCircle which support precompilation, which
+is why we need the `Pkg.clone` command.
 
 ## Other software
 
