@@ -7,11 +7,11 @@ Return the SAC trace as read from file `file` as a `SACtr` object.  If `swap` is
 then auto-byteswapping is not performed and an error is returned if the file is not
 of the assumed endianness.  Autoswapping is reported unless `terse` is `true`.
 """
-function read(file; swap::Bool=true, terse::Bool=false)
+function read(file; swap::Bool=true, terse::Bool=false, check_npts::Bool=true)
     data = open(file, "r") do f
         Base.read(f)
     end
-    SACtr(data, file, swap=swap, terse=terse)
+    SACtr(data, file, swap=swap, terse=terse, check_npts=check_npts)
 end
 
 """

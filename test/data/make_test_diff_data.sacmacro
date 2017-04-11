@@ -4,5 +4,9 @@ do points list two three five
     dif $points$
     setbb file "test_diff_data_points_$points$.sac"
     w %file%
+* Workaround for a bug in dif where npts is decreased in the operation, but the
+* full 1000 points are written to disk, giving a SAC file which is self-inconsistent.
+    r %file%
+    w over
 enddo
 quit

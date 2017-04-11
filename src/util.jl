@@ -1,6 +1,20 @@
 # Utility routines
 
 """
+    isundefined(x) -> ::Bool
+
+If the SAC value `x` is undefined, return `true`.
+
+    isundefined(s::SACtr, x::Symbol) -> :: Bool
+
+Test whether header `x` is undefined for trace `s`.
+"""
+isundefined(x::SACFloat) = x == sac_rnull
+isundefined(x::SACInt) = x == sac_inull
+isundefined(x::SACChar) = x == sac_cnull
+isundefined(s::SACtr, x::Symbol) = isundefined(getfield(s, x))
+
+"""
     sample() -> ::SACtr
 
 Return some sample SAC data, a regional earthquake arrival.

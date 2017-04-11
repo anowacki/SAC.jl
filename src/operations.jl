@@ -37,10 +37,9 @@ function cut!(s::SACtr, b::Real, e::Real)
     ib = round(Int, (b - s.b)/s.delta) + 1
     ie = s.npts - round(Int, (s.e - e)/s.delta)
     s.t = s.t[ib:ie]
-    s.b, s.e = b, e
+    s.b, s.e = s.b + (ib - 1)*s.delta, s.b + (ie - 1)*s.delta
     s.npts = ie - ib + 1
     update_headers!(s)
-    return
 end
 
 # Array version of cut!
@@ -48,6 +47,7 @@ function cut!(a::Array{SACtr}, b::Number, e::Number)
     for s in a
         SAC.cut!(s, b, e)
     end
+    a
 end
 
 function cut!{B<:Real,E<:Real}(a::Array{SACtr}, b::Array{B}, e::Array{E})
@@ -55,6 +55,7 @@ function cut!{B<:Real,E<:Real}(a::Array{SACtr}, b::Array{B}, e::Array{E})
     for (s, beg, en) in zip(a, b, e)
         SAC.cut!(s, beg, en)
     end
+    a
 end
 
 """
@@ -267,12 +268,12 @@ function rmean!(s::SACtr)
     # Remove the mean in-place
     s.t = s.t - mean(s.t)
     update_headers!(s)
-    return
 end
 function rmean!(a::Array{SACtr})
     for s in a
         rmean!(s)
     end
+    a
 end
 
 """
@@ -307,13 +308,14 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
         setfield!(t, :kcmpnm, SAC.sacstring(getfield(t, :cmpaz)))
         SAC.update_headers!(t)
     end
-    return
+    s1, s2
 end
 function rotate_through!(a::Array{SACtr}, phi)
     length(a)%2 != 0 && error("SAC.rotate_through!: Array of traces must be a multiple of two long")
     for i = 1:length(a)÷2
         rotate_through!(a[2*i - 1], a[2*i], phi)
     end
+    a
 end
 
 """
@@ -341,12 +343,12 @@ function rtrend!(s::SACtr)
     x0, x1 = linreg(t, s.t)
     s.t = s.t - (x0 + x1*t)
     update_headers!(s)
-    return
 end
 function rtrend!(a::Array{SACtr})
     for s in a
         rtrend!(s)
     end
+    a
 end
 
 """
@@ -393,9 +395,9 @@ function taper!(s::SACtr, width=0.05, form=:hanning::Symbol)
     end
 
     SAC.update_headers!(s)
-    return
 end
-taper!(S::Array{SACtr}, width=0.05, form::Symbol=:hamming) = for s in S taper!(s, width, form) end
+taper!(S::Array{SACtr}, width=0.05, form::Symbol=:hamming) =
+    (for s in S taper!(s, width, form) end; S)
 
 """
     tshift!(::SACtr, tshift; wrap=true)
@@ -417,7 +419,6 @@ function tshift!(s::SACtr, tshift::Number; wrap=true)
         n > 0 ? s.t[1:n] = 0. : s.t[end+n+1:end] = 0.
     end
     update_headers!(s)
-    return
 end
 
 """
@@ -432,11 +433,12 @@ function update_headers!(s::SACtr)
     s.depmin = minimum(s.t)
     s.depmen = mean(s.t)
     s.e = s.b + s.delta*(s.npts - 1)
-    return
+    s
 end
 
 function update_headers!(a::Array{SACtr})
     for s in a
         update_headers!(s)
     end
+    a
 end

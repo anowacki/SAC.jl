@@ -3,12 +3,12 @@
 const available_filters = [:butterworth]
 
 """
-    bandpass!(::SACtr, c1, c2; ftype=:butterworth, npoles=2, passes=1)
+    bandpass!(s::SACtr, c1, c2; ftype=:butterworth, npoles=2, passes=1) -> s
 
-Perform a bandpass filter on the SAC trace, between frequency corners `c1`
-and `c2`.
+Perform a bandpass filter on the SAC trace `s`, between frequency corners `c1`
+and `c2`, returning the modified trace.
 
-Select type of filter with `ftype`: current options are: `:butterworth`.
+Select type of filter with `ftype`: current options are: `$(available_filters)`.
 Set number of poles with `npoles`.
 
 `passes` may be 1 (forward) or 2 (forward and reverse).
@@ -22,7 +22,6 @@ function bandpass!(s::SACtr, c1::Number, c2::Number;
     # Create apply the filter
     f = DSP.digitalfilter(response, prototype)
     apply_filter!(s, f, passes)
-    return
 end
 
 function bandpass!(a::Array{SACtr}, c1, c2; ftype="butterworth", npoles=sac_npoles,
@@ -30,15 +29,17 @@ function bandpass!(a::Array{SACtr}, c1, c2; ftype="butterworth", npoles=sac_npol
     for s in a
         bandpass!(s, c1, c2; ftype=ftype, npoles=npoles, passes=passes)
     end
+    a
 end
 const bp! = bandpass!
 
 """
-    highpass!(::SACtr, c; ftype=:butterworth, npoles=2, passes=1)
+    highpass!(s::SACtr, c; ftype=:butterworth, npoles=2, passes=1) -> s
 
-Perform a highpass filter on the SAC trace, above frequency corner `c`.
+Perform a highpass filter on the SAC trace `s`, above frequency corner `c`,
+returning the modified trace.
 
-Select type of filter with `ftype`: current options are: `butterworth`.
+Select type of filter with `ftype`: current options are: `$(available_filters)`.
 Set number of poles with `npoles`.
 
 `passes` may be 1 (forward) or 2 (forward and reverse).
@@ -51,7 +52,6 @@ function highpass!(s::SACtr, c::Number;
     prototype = get_filter_prototype(ftype, npoles)
     f = DSP.digitalfilter(response, prototype)
     apply_filter!(s, f, passes)
-    return
 end
 
 function highpass!(a::Array{SACtr}, c;
@@ -59,15 +59,19 @@ function highpass!(a::Array{SACtr}, c;
     for s in a
         highpass!(s, c; ftype=ftype, npoles=npoles, passes=passes)
     end
+    a
 end
 const hp! = highpass!
 
 """
-    lowpass!(::SACtr, c; ftype=\"butterworth\", npoles=2, passes=1)
+    lowpass!(s::SACtr, c; ftype=:butterworth, npoles=2, passes=1) -> s
 
-Perform a lowpass filter on the SAC trace, above frequency corner `c`.\n
-Select type of filter with `ftype`: current options are: `butterworth`.
-Set number of poles with `npoles`.\n
+Perform a lowpass filter on the SAC trace `s`, above frequency corner `c`,
+returning the modified trace.
+
+Select type of filter with `ftype`: current options are: `$(available_filters)`.
+Set number of poles with `npoles`.
+
 `passes` may be 1 (forward) or 2 (forward and reverse).
 """
 function lowpass!(s::SACtr, c::Number;
@@ -77,7 +81,6 @@ function lowpass!(s::SACtr, c::Number;
     prototype = get_filter_prototype(ftype, npoles)
     f = DSP.digitalfilter(response, prototype)
     apply_filter!(s, f, passes)
-    return
 end
 
 function lowpass!(a::Array{SACtr}, c;
@@ -85,6 +88,7 @@ function lowpass!(a::Array{SACtr}, c;
     for s in a
         lowpass!(s, c; ftype=ftype, npoles=npoles, passes=passes)
     end
+    a
 end
 const lp! = lowpass!
 
@@ -98,7 +102,6 @@ function apply_filter!(s::SACtr, f, passes::Integer)
         error("SAC.apply_filter!: passes must be 1 or 2")
     end
     update_headers!(s)
-    return
 end
 
 """
@@ -120,5 +123,5 @@ function get_filter_prototype(ftype, npoles::Integer)
     else
         error("SAC.get_filter_prototype: unrecognised filter type '$ftype'")
     end
-    return prototype
+    prototype
 end

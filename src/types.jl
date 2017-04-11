@@ -44,13 +44,17 @@ is accessed through the field name `t`.  Supply the constant sampling interval `
 in seconds, and the number of points in the trace `t`.  Optionally, specify the trace
 start time `b` in seconds.
 
-    SACtr(d::Vector{UInt8}) -> ::SACtr
+    SACtr(d::Vector{UInt8}, file=""; swap=true, terse=false, check_npts=true) -> ::SACtr
 
 Construct a SACtr from a raw array of bytes representing some data in SAC format.
+If `swap` is false, then non-native-endian files are not converted.  If `terse` is
+true, then warnings about swapping are not written.  If `check_npts` is false, then
+parts of files are read without error.
 """ SACtr
 
 
-@eval function SACtr(data::Vector{UInt8}, file=""; swap::Bool=true, terse::Bool=false)
+@eval function SACtr(data::Vector{UInt8}, file=""; swap::Bool=true, terse::Bool=false,
+        check_npts::Bool=true)
     const len = sac_byte_len
     const clen = 2*sac_byte_len
     # Determine endianness and act accordingly
@@ -86,16 +90,22 @@ Construct a SACtr from a raw array of bytes representing some data in SAC format
     kevnm = kevnm1 * kevnm2
     off += (length(sac_char_hdr) + 1)*clen
 
+    # Check length
+    @assert off == sac_header_len
+    npts_in_file = (length(data) - sac_header_len)÷len
+    check_npts && npts_in_file < npts &&
+        error("Number of points is not as expected: have $npts_in_file versus npts = " *
+            "$npts in header" * (file!="" ? " for file '$file'." : "."))
+
     # Create an empty object...
-    trace = SACtr(delta, npts)
+    trace = SACtr(delta, npts_in_file)
     # ...and fill the headers...
     $([:(trace.$s = $s) for s in sac_all_hdr]...)
     # ...then read in the trace
-    for i = 1:npts
-        trace.t[i] = byteswap(reinterpret(SACFloat, data[(i-1)*len+1+off:i*len+off])[1])
-    end
+    trace.t .= reinterpret(SACFloat, data[(sac_header_len+1):end])
+    native || (trace.t .= bswap.(trace.t))
     update_headers!(trace)
-    any([trace.gcarc, trace.az, trace.baz] .== sac_rnull) && update_great_circle!(trace)
+    any(isundefined.([trace.gcarc, trace.az, trace.baz])) && update_great_circle!(trace)
     trace
 end
 
@@ -136,10 +146,13 @@ function setindex!(A::Array{SACtr}, V, s::Symbol)
     else
         error("Number of header values must be one or the number of traces")
     end
+    s in (:evlo, :evla, :stlo, :stla) && update_great_circle!.(t)
+    A
 end
 function setindex!(t::SACtr, v, s::Symbol)
     setfield!(t, s, convert(typeof(getfield(t, s)), v))
     s in (:evlo, :evla, :stlo, :stla) && update_great_circle!(t)
+    t
 end
 
 """
