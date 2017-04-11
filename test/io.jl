@@ -12,3 +12,11 @@ tempfile = tempname()
     s2 = SAC.read(tempfile)
     s1 == s2
 end
+
+# Cutting
+@test begin
+    s1 = SAC.read(tempfile)
+    cut!(s1, 12, 13)
+    s2 = SAC.read_cut(tempfile, 12, 13)
+    s1 == s2
+end

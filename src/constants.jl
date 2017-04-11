@@ -67,3 +67,7 @@ const sac_all_hdr = [sac_float_hdr; sac_int_hdr; sac_bool_hdr; sac_char_hdr]
 
 # Where in the file the NVHDR value is
 const sac_nvhdr_pos = length(sac_float_hdr) + find(sac_int_hdr .== :nvhdr)[1] - 1
+
+# Length in bytes of total SAC header, accounting for double-length kevnm
+const sac_header_len = sac_byte_len*(length(sac_float_hdr) + length(sac_int_hdr) +
+    length(sac_bool_hdr)) + saccharlen*(length(sac_char_hdr) + 1)
