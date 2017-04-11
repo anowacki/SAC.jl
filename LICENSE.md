@@ -1,6 +1,6 @@
-The Julia CIJ module is licensed under under an MIT-style licence:
+The Julia SAC module is licensed under under an MIT-style licence:
 
-Copyright (c) 2015-6 Andy Nowacki (a.nowacki@leeds.ac.uk)
+Copyright (c) 2015-7 Andy Nowacki (a.nowacki@leeds.ac.uk)
 
 The routines 'vincentypt' and 'vincentydist' are copyright Kyle Wilcox
 and Alexander Crosby.
