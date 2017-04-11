@@ -1,6 +1,9 @@
-The Julia CIJ module is licensed under under and MIT-style license:
+The Julia CIJ module is licensed under under an MIT-style licence:
 
 Copyright (c) 2015-6 Andy Nowacki (a.nowacki@leeds.ac.uk)
+
+The routines 'vincentypt' and 'vincentydist' are copyright Kyle Wilcox
+and Alexander Crosby.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

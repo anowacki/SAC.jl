@@ -9,7 +9,6 @@ __precompile__()
 
 import DSP
 import Glob
-import GreatCircle
 import Base: ==, copy, diff, getindex, fft, setindex!, time, write
 
 export
@@ -39,6 +38,7 @@ export
 
 include("constants.jl")
 include("types.jl")
+include("great_circle.jl")
 include("io.jl")
 include("operations.jl")
 include("filtering.jl")
