@@ -166,3 +166,24 @@ function read_wild(pat::String, dir::String="."; echo::Bool=true)
     end
     return A, files
 end
+
+# List printing
+function Base.show(io::IO, s::SACtr)
+    out = "SAC.SACtr(delta=$(s[:delta])"
+    for hdr in (:b, :npts, :kstnm, :gcarc, :az, :baz)
+        if !isundefined(s[hdr])
+            out *= ", " * string(hdr) * "=" * strip(string(s[hdr]))
+        end
+    end
+    print(io, out * ")")
+end
+
+# Printing to the REPL, for instance
+function Base.show(io::IO, ::MIME"text/plain", s::SACtr)
+    hdr_string_len = maximum(length.(string.(sac_all_hdr)))
+    print(io, "SAC.SACtr:")
+    for hdr in sac_all_hdr
+        !isundefined(s[hdr]) &&
+            print(io, "\n", lpad(string(hdr), hdr_string_len, ' ') * ": ", s[hdr])
+    end
+end

@@ -11,7 +11,8 @@ Test whether header `x` is undefined for trace `s`.
 """
 isundefined(x::SACFloat) = x == sac_rnull
 isundefined(x::SACInt) = x == sac_inull
-isundefined(x::SACChar) = x == sac_cnull
+isundefined(x::SACChar) = strip(x) == strip(sac_cnull)
+isundefined(x::SACBool) = false
 isundefined(s::SACtr, x::Symbol) = isundefined(getfield(s, x))
 
 """
