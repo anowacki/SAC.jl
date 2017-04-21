@@ -146,7 +146,7 @@ function setindex!(A::Array{SACtr}, V, s::Symbol)
     else
         error("Number of header values must be one or the number of traces")
     end
-    s in (:evlo, :evla, :stlo, :stla) && update_great_circle!.(t)
+    s in (:evlo, :evla, :stlo, :stla) && update_great_circle!.(A)
     A
 end
 function setindex!(t::SACtr, v, s::Symbol)
