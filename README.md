@@ -17,6 +17,8 @@ Although not registered as an official package, SAC.jl can be added to your
 Julia install like so:
 
 ```julia
+Pkg.add("DSP")
+Pkg.add("Glob")
 Pkg.clone("https://github.com/anowacki/SAC.jl")
 ```
 
@@ -37,19 +39,27 @@ for arrays of `SACtr`, `Array{SACtr}`, which allows for easy operations on
 multiple traces.
 
 The `SACtr` type has fields whose names and types correspond to SAC headers.
-Do to access or set a header variable, just manipulate the object directly:
+These are accessed via `Symbol`s which are the name of header.  (To get a `Symbol`,
+just write the name of the header with a colon in front.)
 
 ```julia
-julia> t = SAC.sample();
+julia> t = SAC.sample()
+SAC.SACtr:
+    delta: 0.01
+   depmin: -1.56928
+   depmax: 1.52064
+        b: 9.459999
+		  ⋮
+    kevnm: K8108838
 
 julia> typeof(t)
 SAC.SACtr
 
-julia> t.delta
+julia> t[:delta]
 0.01f0
 
-julia> t.delta = 0.02
-0.02f0
+julia> t[:delta] = 0.02
+0.02
 ```
 
 (Note that SAC floating point headers are `Float32`s.)
@@ -65,12 +75,22 @@ julia> t.t += 1 # Add 1 to all points, like SAC's "add" command
  0.9232 
 ```
 
-You can also get or modify several header values at once by indexing via a
-symbol; basically, using the name of the header variable preceded by a colon:
+You can also get or modify several header values at once:
 
 ```julia
+julia> T = [SAC.sample() for _ in 1:5]
+5-element Array{SAC.SACtr,1}:
+ SAC.SACtr(delta=0.01, b=9.459999, npts=1000, kstnm=CDV, gcarc=3.357463, az=88.14708, baz=271.8529)
+ SAC.SACtr(delta=0.01, b=9.459999, npts=1000, kstnm=CDV, gcarc=3.357463, az=88.14708, baz=271.8529)
+ SAC.SACtr(delta=0.01, b=9.459999, npts=1000, kstnm=CDV, gcarc=3.357463, az=88.14708, baz=271.8529)
+ SAC.SACtr(delta=0.01, b=9.459999, npts=1000, kstnm=CDV, gcarc=3.357463, az=88.14708, baz=271.8529)
+ SAC.SACtr(delta=0.01, b=9.459999, npts=1000, kstnm=CDV, gcarc=3.357463, az=88.14708, baz=271.8529)
+
 julia> typeof(T)
 Array{SAC.SACtr,1}
+
+julia> T[:t0] = 1:5 # Set time markers in t0
+1:5
 
 julia> T[:t0]
 5-element Array{Float32,1}:
@@ -88,7 +108,7 @@ julia> T[:t0] += 2 # Move all time markers back by 2 s
  6.0
  7.0
 
-julia> T[:kstnm] = ["A1", "B2", "C3", "D4", "E5"]
+julia> T[:kstnm] = ["A1", "B2", "C3", "D4", "E5"] # Set station names
 5-element Array{ASCIIString,1}:
  "A1"
  "B2"
@@ -130,9 +150,11 @@ write(T, filenames)
 A number of common processing steps are already implemented as methods, such as
 `lowpass!`, `taper!`, `envelope!` and so on.  In many cases, methods which have
 similar names to SAC commands can also be used with the SAC short forms.  For
-instance, `bandpass!` and `bp!` are the same.  Note that as is convention in
-Julia, these commands end with an exclamation mark (!) and modify the trace.
-Create a copy of the trace with `copy` if this is not desired.
+instance, `bandpass!` and `bp!` are the same.
+
+Note that as is convention in Julia, these commands end with an exclamation
+mark (!) and modify the trace in-place.  Copying versions of these commands are
+available and do not have an exclamation mark (e.g., `lowpass`, `taper`, etc.).
 
 ### File endianness
 [SAC/BRIS](http://www1.gly.bris.ac.uk/~george/sac-bugs.html) expects files to
@@ -153,14 +175,15 @@ and type the name of the function:
 
 ```julia
 help?> bandpass!
-search: bandpass!
+search: bandpass! bandpass
 
-  bandpass!(::SACtr, c1, c2; ftype="butterworth", npoles=2, passes=1)
+  bandpass!(s::SACtr, c1, c2; ftype=:butterworth, npoles=2, passes=1) -> s
 
-  Perform a bandpass filter on the SAC trace, between frequency corners c1 and c2.
+  Perform a bandpass filter on the SAC trace s, between frequency corners c1 and c2,
+  returning the modified trace.
 
-  Select type of filter with ftype: current options are: butterworth. Set number of
-  poles with npoles.
+  Select type of filter with ftype: current options are: Symbol[:butterworth]. Set
+  number of poles with npoles.
 
   passes may be 1 (forward) or 2 (forward and reverse).
 ```
@@ -175,17 +198,12 @@ Calling up the interactive help will give a useful description of each.
 ## Dependencies
 - [Glob.jl](https://github.com/vtjnash/Glob.jl)
 - [DSP.jl](https://github.com/JuliaDSP/DSP.jl)
-- [GreatCircle.jl](https://github.com/acrosby/GreatCircle.jl)
 
 Install these using by doing
 ```julia
 Pkg.add("Glob")
 Pkg.add("DSP")
-Pkg.clone("https://github.com/anowacki/GreatCircle.jl", "an/precompile")
 ```
-
-Note that we need a version of GreatCircle which support precompilation, which
-is why we need the `Pkg.clone` command.
 
 ## Other software
 
