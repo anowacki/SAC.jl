@@ -94,9 +94,11 @@ for (name, abbrev) in copying_funcs
     if abbrev != nothing
         @eval begin
             const $new_abbrev = $new_name
-            export $new_name, $new_abbrev
+            export $new_abbrev
         end
     end
 end
+
+include("precompile.jl")
 
 end # module SAC
