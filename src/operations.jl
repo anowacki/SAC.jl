@@ -12,11 +12,14 @@ end
 add!(s::SACtr, val) = add!([s], val)
 
 """
-    cut!(s::SACtr, b::Number, e::Number)
-    cut!(s::Array{SACtr}, b::Number, e::Number)
+    cut!(s::Union{SACtr,Array{SACtr}}, b, e)
+    cut!(s::Union{SACtr,Array{SACtr}}, beg_head::Symbol, b, end_head::Symbol, e)
 
-Cut a trace or array of traces `s` in memory between times `b` and `e`, relative
-to the O marker.
+In the first form, cut a trace or array of traces `s` in memory between times
+`b` and `e`, relative to the O marker.
+
+In the second form, cut based on headers `beg_head` and `end_head`, from
+`beg_head+b` to `end_head+e`.
 
     cut!(s::Array{SACtr}, a::Array, b::Array)
 
@@ -41,12 +44,22 @@ function cut!(s::SACtr, b::Real, e::Real)
     s.npts = ie - ib + 1
     update_headers!(s)
 end
+function cut!(s::SACtr, bh::Symbol, b::Real, eh::Symbol, e::Real)
+    isundefined(s[bh]) && error("Header $bh is not defined")
+    isundefined(s[eh]) && error("Header $eh is not defined")
+    b, e = s[bh] + b, s[eh] + e
+    cut!(s, b, e)
+end
 
 # Array version of cut!
 function cut!(a::Array{SACtr}, b::Number, e::Number)
     for s in a
         SAC.cut!(s, b, e)
     end
+    a
+end
+function cut!(a::Array{SACtr}, bh::Symbol, b::Real, eh::Symbol, e::Real)
+    for s in a cut!(s, bh, b, eh, e) end
     a
 end
 
@@ -326,7 +339,7 @@ in `s1` and `s2`, leaving the originals unaltered.  See docs of `rotate_through!
 """
 function rotate_through(s1::SACtr, s2::SACtr, phi)
     s1_new, s2_new = deepcopy(s1), deepcopy(s2)
-    rotate_through!(s2, s2, phi)
+    rotate_through!(s1_new, s2_new, phi)
     s1_new, s2_new
 end
 rotate_through(a::Array{SACtr}, phi) =
@@ -400,7 +413,7 @@ taper!(S::Array{SACtr}, width=0.05, form::Symbol=:hamming) =
     (for s in S taper!(s, width, form) end; S)
 
 """
-    tshift!(::SACtr, tshift; wrap=true)
+    tshift!(::SACtr, tshift, wrap=true)
 
 Shift a SAC trace backward in time by `t` seconds.
 
@@ -408,7 +421,7 @@ If `wrap` true (default), then points which move out the back of the trace
 are added to the front (and vice versa).  Setting it to false instead pads the
 trace with zeroes.
 """
-function tshift!(s::SACtr, tshift::Number; wrap=true)
+function tshift!(s::SACtr, tshift::Number, wrap=true)
     n = round(Int, tshift/s.delta)
     if n == 0
         sac_verbose && info("SAC.tshift!: t ($tshift) is less than delta ($(s.delta)) so no shift applied")
