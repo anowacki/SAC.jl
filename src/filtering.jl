@@ -24,7 +24,7 @@ function bandpass!(s::SACtr, c1::Number, c2::Number;
     apply_filter!(s, f, passes)
 end
 
-function bandpass!(a::Array{SACtr}, c1, c2; ftype="butterworth", npoles=sac_npoles,
+function bandpass!(a::Array{SACtr}, c1, c2; ftype=:butterworth, npoles=sac_npoles,
         passes=sac_passes)
     for s in a
         bandpass!(s, c1, c2; ftype=ftype, npoles=npoles, passes=passes)
