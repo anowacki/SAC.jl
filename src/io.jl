@@ -159,7 +159,7 @@ function read_wild(pat::String, dir::String="."; echo::Bool=true)
         info("SAC.read_wild: No files matching '$pat' in directory '$dir'")
         return
     end
-    A = Array(SACtr, n)
+    A = Array{SACtr}(n)
     for i = 1:n
         echo && info("SAC.read: '$(files[i])'")
         A[i] = SAC.read(files[i]; terse=!echo)

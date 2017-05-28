@@ -176,7 +176,7 @@ end
 function fft(a::Array{SACtr})
     # Return arrays containing f and S for an array of SACtr objects
     n = length(a)
-    f, S = Array(Array, n), Array(Array, n)
+    f, S = Array{Array}(n), Array{Array}(n)
     for i = 1:n
         f[i], S[i] = fft(a[i])
     end
