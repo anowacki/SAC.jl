@@ -138,26 +138,24 @@ function write(s::Array{SACtr}, file::Array{String}; args...)
 end
 
 """
-    read_wild(pat, dir=\"./\"; echo=true) -> A, files
+    read_wild(pat, dir="."; echo=true) -> A, files
 
 Read files matching globbing pattern `pat` from directory `dir`.
 If `echo` is false, do not show which files are being read.
 
 Returns an array of SACtr types `A`, and an array of file names `files`.
+**NB:** If no files are matched, then empty `SACtr` and `String` arrays
+are returned and a warning message printed.
 """
 function read_wild(pat::String, dir::String="."; echo::Bool=true)
     # Return an array of SACtr types, and an array which gives the file path
     # for each trace.  Return nothing if there are no files.
     # Defaults to current directory.
-    if !isdir(dir)
-        info("SAC.read_wild: No directory '$dir'")
-        return
-    end
     files = Glob.glob(pat, dir)
     n = size(files, 1)
     if n == 0
         info("SAC.read_wild: No files matching '$pat' in directory '$dir'")
-        return
+        return SACtr[], String[]
     end
     A = Array{SACtr}(n)
     for i = 1:n
