@@ -303,7 +303,7 @@ This is a reference frame transformation (passive rotation) and hence particle m
 will appear to rotate anti-clockwise.
 """
 function rotate_through!(s1::SACtr, s2::SACtr, phi)
-    if !(mod(abs(s2.cmpaz - s1.cmpaz), SACFloat(180)) ≈ SACFloat(90))
+    if !traces_are_orthogonal(s1, s2)
         error("SAC.rotate_through!: traces must be orthogonal")
     elseif s1.npts != s2.npts
         error("SAC.rotate_through!: traces must be same length")
@@ -311,15 +311,14 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
         error("SAC.rotate_through!: traces must have same delta")
     end
     phir = deg2rad(phi)
-    R = [cos(phir) sin(phir);
-        -sin(phir) cos(phir)]
-    for i = 1:s1.npts
-        (s1.t[i], s2.t[i]) = R*[s1.t[i]; s2.t[i]]
+    cosp, sinp = cos(phir), sin(phir)
+    @inbounds for i = 1:s1.npts
+        s1.t[i], s2.t[i] = cosp*s1.t[i] - sinp*s2.t[i], sinp*s1.t[i] + cosp*s2.t[i]
     end
     for t in (s1, s2)
         setfield!(t, :cmpaz, SAC.SACFloat(mod(getfield(t, :cmpaz) + phi, 360.)))
-        setfield!(t, :kcmpnm, SAC.sacstring(getfield(t, :cmpaz)))
-        SAC.update_headers!(t)
+        setfield!(t, :kcmpnm, SAC.sacstring(round(getfield(t, :cmpaz), 2)))
+        update_headers!(t)
     end
     s1, s2
 end
@@ -337,13 +336,57 @@ end
 Copying version of `rotate_through` which returns modified versions of the traces
 in `s1` and `s2`, leaving the originals unaltered.  See docs of `rotate_through!` for details.
 """
-function rotate_through(s1::SACtr, s2::SACtr, phi)
+function rotate_through{T<:Union{SACtr,Array{SACtr}}}(s1::T, s2::T, phi)
     s1_new, s2_new = deepcopy(s1), deepcopy(s2)
-    rotate_through!(s1_new, s2_new, phi)
+    rotate_through!.(s1_new, s2_new, phi)
     s1_new, s2_new
 end
-rotate_through(a::Array{SACtr}, phi) =
-    rotate_through(@view(s1[1:2:end]), @view(s2[2:2:end]), phi)
+rotate_through(a::Array{SACtr}, phi) = rotate_through!(deepcopy(a), phi)
+
+"""
+    rotate_to_gcp!(s1::SACtr, s2::SACtr, reverse=false) -> s1, s2
+
+Rotate a pair of SAC traces in place, and return them, so that s1 points along
+the radial direction (the backazimuth plus 180°), and s2 is 90° clockwise from
+that.
+
+If `reverse` is true, then s2 is rotated to be 90° anticlockwise, so that the
+polarity is reversed.
+
+The component names of the radial and transverse traces are updated to be
+'R', and either 'T' or '-T' respectively for normal and reverse polarity.
+
+    rotate_to_gcp!(a::Array{SACtr}, reverse=false) -> a
+
+Rotate traces where each subsuequent pair of traces in the array are considered
+as the two horizontal components
+"""
+function rotate_to_gcp!(s1::SACtr, s2::SACtr, reverse::Bool=false)
+    s2_is_clockwise_of_s1 = angle_difference(s1[:cmpaz], s2[:cmpaz]) > 0
+    s2_is_clockwise_of_s1 || ((s1, s2) = (s2, s1))
+    !isundefined(s1[:baz]) && !isundefined(s2[:baz]) ||
+        throw(ArgumentError("Backazimuth is not defined for both traces"))
+    s1[:baz] ≈ s2[:baz] || throw(ArgumentError("Backazimuth not the same for both traces"))
+    phi = mod(s1[:baz] + 180 - s1[:cmpaz], 360)
+    rotate_through!(s2, s1, phi) # Checks for orthogonality
+    reverse && flip_component!(s2)
+    s1[:kcmpnm] = sacstring("Radial")
+    s2[:kcmpnm] = sacstring((reverse?"-":"")*"Trans")
+    s1, s2
+end
+function rotate_to_gcp!(a::Array{SACtr}, reverse::Bool=false)
+    length(a)%2 == 0 || throw(ArgumentError("Array of traces must be a multiple of two long"))
+    for i in 1:length(a)÷2
+        rotate_to_gcp!(a[2i-1], a[2i], reverse)
+        # FIXME: This shouldn't be necessary, but is probably due to swapping
+        # of the components in rotate_to_gcp!(s1, s2) above.
+        if strip(a[2i-1][:kcmpnm]) == "Trans" a[2i-1], a[2i] = a[2i], a[2i-1] end
+    end
+    a
+end
+
+rotate_to_gcp(s1::SACtr, s2::SACtr, args...) = rotate_to_gcp!(deepcopy(s1), deepcopy(s2), args...)
+rotate_to_gcp(a::Array{SACtr}, args...) = rotate_to_gcp!(deepcopy(a), args...)
 
 """
     rtrend!(::SACtr)
