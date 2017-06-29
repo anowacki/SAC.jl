@@ -5,7 +5,7 @@ sample_data = SAC.sample()
 
 # Don't accept wrong arguments
 for i in (0, 1, 4, 6)
-    @test_throws ArgumentError SAC.differentiate(sample_data, 1)
+    @test_throws ArgumentError SAC.differentiate(sample_data, i)
 end
 
 # Compare against output from SAC
