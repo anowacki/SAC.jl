@@ -131,7 +131,6 @@ function differentiate!(s::SACtr, npoints::Integer=2)
     end
     update_headers!(s)
 end
-const diff! = differentiate!
 
 """
     divide!(::SACtr, value)
@@ -143,7 +142,6 @@ function divide!(a::Array{SACtr}, value)
     multiply!(a, 1./value)
 end
 divide!(s::SACtr, value) = divide!([s], value)
-const div! = divide!
 
 """
     envelope!(::SACtr)

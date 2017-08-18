@@ -1,3 +1,5 @@
+__precompile__()
+
 """
 SAC.jl provides routines for dealing with SAC-formatted time series files,
 including reading, writing, filtering, mean removal, rotating, and so on.
@@ -5,11 +7,9 @@ Sister library SACPlot.jl can be used for plotting.
 """
 module SAC
 
-__precompile__()
-
 import DSP
 import Glob
-import Base: ==, copy, diff, getindex, fft, setindex!, time, write
+import Base: ==, copy, getindex, fft, setindex!, time, write
 
 export
     SACtr,
@@ -17,7 +17,6 @@ export
     bp!,
     copy,
     cut!,
-    diff!,
     differentiate!,
     envelope!,
     fft,
@@ -53,10 +52,6 @@ using .Stack
 export stack
 
 # Build all copying routines
-#FIXME: Our definition of SAC.diff(::Array{SACtr}) is ambiguous with
-#       Base.diff(::AbstractArray), meaning we get a
-#           WARNING: imported binding for diff overwritten in module SAC
-#       every time we `import SAC`.
 """Dict with keys given by name of each function to have a copying version.
    Where an abbreviated version exists, that is given as the value; otherwise
    the value is `nothing`"""
@@ -64,8 +59,8 @@ const copying_funcs = Dict(
     :add! => nothing,
     :bandpass! => :bp!,
     :cut! => nothing,
-    :differentiate! => :diff!,
-    :divide! => :div!,
+    :differentiate! => nothing,
+    :divide! => nothing,
     :envelope! => nothing,
     :flip_component! => :flip!,
     :highpass! => :hp!,
