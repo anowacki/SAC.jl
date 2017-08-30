@@ -84,10 +84,11 @@ for (name, abbrev) in copying_funcs
             s_new
         end
         @doc """
+        $(@doc $name)
             $($new_name)(s::Union{SACtr,Array{SACtr}}, args...; kwargs...) -> s_new
 
         Copying version of `$($name)` which returns modified version(s) of the trace(s)
-        in `s`, leaving the originals unaltered.  See docs of `$($name)` for details.
+        in `s`, leaving the originals unaltered.
         """ $new_name
         export $new_name
     end
