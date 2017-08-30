@@ -78,7 +78,8 @@ function sample(kind::Symbol)
         file_pattern = "*" * dir[end] * ".*"
         dir = dir[1:end-1]
     end
-    A, f = read_wild(file_pattern, dir, echo=false)
+    A, filenames = read_wild(file_pattern, dir, echo=false)
+    A[:kcmpnm] = [split(filename, ".")[end] for filename in filenames]
     A
 end
 

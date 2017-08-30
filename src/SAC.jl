@@ -33,6 +33,7 @@ export
     rotate_to_gcp!,
     rotate_to_gcp,
     rtrend!,
+    sample,
     taper!,
     time,
     tshift!,
