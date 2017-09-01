@@ -75,10 +75,11 @@ function sample(kind::Symbol)
         throw(ArgumentError("Sample data kind must be one of: $SAMPLE_DATA_KINDS"))
     dir = joinpath(SAMPLE_DATA_DIR, string(kind))
     if kind in [:teleseism, :teleseisl]
-        file_pattern = "*" * dir[end] * ".*"
+        file_pattern = "*" * dir[end:end] * ".*"
         dir = dir[1:end-1]
     end
-    A, f = read_wild(file_pattern, dir, echo=false)
+    A, filenames = read_wild(file_pattern, dir, echo=false)
+    A[:kcmpnm] = [split(filename, ".")[end] for filename in filenames]
     A
 end
 

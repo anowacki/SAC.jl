@@ -131,7 +131,6 @@ function differentiate!(s::SACtr, npoints::Integer=2)
     end
     update_headers!(s)
 end
-const diff! = differentiate!
 
 """
     divide!(::SACtr, value)
@@ -143,7 +142,6 @@ function divide!(a::Array{SACtr}, value)
     multiply!(a, 1./value)
 end
 divide!(s::SACtr, value) = divide!([s], value)
-const div! = divide!
 
 """
     envelope!(::SACtr)
@@ -322,10 +320,27 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
     end
     s1, s2
 end
-function rotate_through!(a::Array{SACtr}, phi)
+function rotate_through!(a::Array{SACtr}, phi::Real)
     length(a)%2 != 0 && error("SAC.rotate_through!: Array of traces must be a multiple of two long")
     for i = 1:length(a)÷2
         rotate_through!(a[2*i - 1], a[2*i], phi)
+    end
+    a
+end
+function rotate_through!{T<:Real}(a::Array{SACtr}, phi::AbstractArray{T})
+    length(a)%2 != 0 &&
+        throw(ArgumentError("SAC.rotate_through!: Array of traces must be a multiple of two long"))
+    if length(phi) == length(a)
+        for i in 1:length(a)÷2
+            rotate_through!(a[2i-1], a[2i], phi[2i])
+        end
+    elseif length(phi) != length(a)÷2 ||
+        for i in 1:length(a)÷2
+            rotate_through!(a[2i-1], a[2i], phi[i])
+        end
+    else
+        throw(ArgumentError("Length of `phi` must be the same as the number of traces " *
+            "or half the number of traces"))
     end
     a
 end
