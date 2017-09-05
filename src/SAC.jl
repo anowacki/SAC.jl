@@ -78,14 +78,14 @@ for (name, abbrev) in copying_funcs
     new_name = Symbol(string(name)[1:end-1])
     new_abbrev = Symbol(string(abbrev)[1:end-1])
     @eval begin
-        function ($new_name)(s::Union{SACtr,Array{SACtr}}, args...; kwargs...)
+        function ($new_name)(s::Union{SACtr,AbstractArray{SACtr}}, args...; kwargs...)
             s_new = deepcopy(s)
             $(name)(s_new, args...; kwargs...)
             s_new
         end
         @doc """
         $(@doc $name)
-            $($new_name)(s::Union{SACtr,Array{SACtr}}, args...; kwargs...) -> s_new
+            $($new_name)(s::Union{SACtr,AbstractArray{SACtr}}, args...; kwargs...) -> s_new
 
         Copying version of `$($name)` which returns modified version(s) of the trace(s)
         in `s`, leaving the originals unaltered.

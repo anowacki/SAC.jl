@@ -5,15 +5,15 @@
 
 Add a constant value to a SAC trace
 """
-function add!(a::Array{SACtr}, val)
+function add!(a::AbstractArray{SACtr}, val)
     for s in a s.t[:] = s.t[:] + val end
     update_headers!(a)
 end
 add!(s::SACtr, val) = add!([s], val)
 
 """
-    cut!(s::Union{SACtr,Array{SACtr}}, b, e)
-    cut!(s::Union{SACtr,Array{SACtr}}, beg_head::Symbol, b, end_head::Symbol, e)
+    cut!(s::Union{SACtr,AbstractArray{SACtr}}, b, e)
+    cut!(s::Union{SACtr,AbstractArray{SACtr}}, beg_head::Symbol, b, end_head::Symbol, e)
 
 In the first form, cut a trace or array of traces `s` in memory between times
 `b` and `e`, relative to the O marker.
@@ -21,7 +21,7 @@ In the first form, cut a trace or array of traces `s` in memory between times
 In the second form, cut based on headers `beg_head` and `end_head`, from
 `beg_head+b` to `end_head+e`.
 
-    cut!(s::Array{SACtr}, a::Array, b::Array)
+    cut!(s::AbstractArray{SACtr}, a::Array, b::Array)
 
 Cut the array of traces `s` between the times in arrays `b` and `e`, which must be
 the same length as `s`.
@@ -52,18 +52,18 @@ function cut!(s::SACtr, bh::Symbol, b::Real, eh::Symbol, e::Real)
 end
 
 # Array version of cut!
-function cut!(a::Array{SACtr}, b::Number, e::Number)
+function cut!(a::AbstractArray{SACtr}, b::Number, e::Number)
     for s in a
         SAC.cut!(s, b, e)
     end
     a
 end
-function cut!(a::Array{SACtr}, bh::Symbol, b::Real, eh::Symbol, e::Real)
+function cut!(a::AbstractArray{SACtr}, bh::Symbol, b::Real, eh::Symbol, e::Real)
     for s in a cut!(s, bh, b, eh, e) end
     a
 end
 
-function cut!{B<:Real,E<:Real}(a::Array{SACtr}, b::Array{B}, e::Array{E})
+function cut!{B<:Real,E<:Real}(a::AbstractArray{SACtr}, b::Array{B}, e::Array{E})
     @assert length(a) == length(b) == length(e) "Arrays `a`, `b` and `e` must be the same length"
     for (s, beg, en) in zip(a, b, e)
         SAC.cut!(s, beg, en)
@@ -137,7 +137,7 @@ end
 
 Divide the values in a SAC trace by `value`
 """
-function divide!(a::Array{SACtr}, value)
+function divide!(a::AbstractArray{SACtr}, value)
     value != 0. || error("SAC.divide!: Cannot divide by 0")
     multiply!(a, 1./value)
 end
@@ -148,7 +148,7 @@ divide!(s::SACtr, value) = divide!([s], value)
 
 Find the envelope of a SAC trace
 """
-function envelope!(a::Array{SACtr})
+function envelope!(a::AbstractArray{SACtr})
     for s in a
         s.t = abs(DSP.hilbert(s.t))
     end
@@ -171,7 +171,7 @@ function fft(s::SACtr)
     return f, S
 end
 
-function fft(a::Array{SACtr})
+function fft(a::AbstractArray{SACtr})
     # Return arrays containing f and S for an array of SACtr objects
     n = length(a)
     f, S = Array{Array}(n), Array{Array}(n)
@@ -263,7 +263,7 @@ end
 
 Multiply the values in a SAC trace by `value`
 """
-function multiply!(a::Array{SACtr}, val)
+function multiply!(a::AbstractArray{SACtr}, val)
     for s in a s.t[:] = s.t[:]*val end
     update_headers!(a)
 end
@@ -280,7 +280,7 @@ function rmean!(s::SACtr)
     s.t = s.t - mean(s.t)
     update_headers!(s)
 end
-function rmean!(a::Array{SACtr})
+function rmean!(a::AbstractArray{SACtr})
     for s in a
         rmean!(s)
     end
@@ -289,7 +289,7 @@ end
 
 """
     rotate_through!(::SACtr, ::SACtr, phi)
-    rotate_through!(::Array{SACtr}, phi)
+    rotate_through!(::AbstractArray{SACtr}, phi)
 
 In the first form, with two SAC traces which are horizontal and orthgonal, rotate
 them *clockwise* by `phi`° about the vertical axis.
@@ -320,14 +320,14 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
     end
     s1, s2
 end
-function rotate_through!(a::Array{SACtr}, phi::Real)
+function rotate_through!(a::AbstractArray{SACtr}, phi::Real)
     length(a)%2 != 0 && error("SAC.rotate_through!: Array of traces must be a multiple of two long")
     for i = 1:length(a)÷2
         rotate_through!(a[2*i - 1], a[2*i], phi)
     end
     a
 end
-function rotate_through!{T<:Real}(a::Array{SACtr}, phi::AbstractArray{T})
+function rotate_through!{T<:Real}(a::AbstractArray{SACtr}, phi::AbstractArray{T})
     length(a)%2 != 0 &&
         throw(ArgumentError("SAC.rotate_through!: Array of traces must be a multiple of two long"))
     if length(phi) == length(a)
@@ -351,12 +351,12 @@ end
 Copying version of `rotate_through` which returns modified versions of the traces
 in `s1` and `s2`, leaving the originals unaltered.  See docs of `rotate_through!` for details.
 """
-function rotate_through{T<:Union{SACtr,Array{SACtr}}}(s1::T, s2::T, phi)
+function rotate_through{T<:Union{SACtr,AbstractArray{SACtr}}}(s1::T, s2::T, phi)
     s1_new, s2_new = deepcopy(s1), deepcopy(s2)
     rotate_through!.(s1_new, s2_new, phi)
     s1_new, s2_new
 end
-rotate_through(a::Array{SACtr}, phi) = rotate_through!(deepcopy(a), phi)
+rotate_through(a::AbstractArray{SACtr}, phi) = rotate_through!(deepcopy(a), phi)
 
 """
     rotate_to_gcp!(s1::SACtr, s2::SACtr, reverse=false) -> s1, s2
@@ -371,7 +371,7 @@ polarity is reversed.
 The component names of the radial and transverse traces are updated to be
 'R', and either 'T' or '-T' respectively for normal and reverse polarity.
 
-    rotate_to_gcp!(a::Array{SACtr}, reverse=false) -> a
+    rotate_to_gcp!(a::AbstractArray{SACtr}, reverse=false) -> a
 
 Rotate traces where each subsuequent pair of traces in the array are considered
 as the two horizontal components
@@ -389,7 +389,7 @@ function rotate_to_gcp!(s1::SACtr, s2::SACtr, reverse::Bool=false)
     s2[:kcmpnm] = sacstring((reverse?"-":"")*"Trans")
     s1, s2
 end
-function rotate_to_gcp!(a::Array{SACtr}, reverse::Bool=false)
+function rotate_to_gcp!(a::AbstractArray{SACtr}, reverse::Bool=false)
     length(a)%2 == 0 || throw(ArgumentError("Array of traces must be a multiple of two long"))
     for i in 1:length(a)÷2
         rotate_to_gcp!(a[2i-1], a[2i], reverse)
@@ -401,7 +401,7 @@ function rotate_to_gcp!(a::Array{SACtr}, reverse::Bool=false)
 end
 
 rotate_to_gcp(s1::SACtr, s2::SACtr, args...) = rotate_to_gcp!(deepcopy(s1), deepcopy(s2), args...)
-rotate_to_gcp(a::Array{SACtr}, args...) = rotate_to_gcp!(deepcopy(a), args...)
+rotate_to_gcp(a::AbstractArray{SACtr}, args...) = rotate_to_gcp!(deepcopy(a), args...)
 
 """
     rtrend!(::SACtr)
@@ -415,7 +415,7 @@ function rtrend!(s::SACtr)
     s.t = s.t - (x0 + x1*t)
     update_headers!(s)
 end
-function rtrend!(a::Array{SACtr})
+function rtrend!(a::AbstractArray{SACtr})
     for s in a
         rtrend!(s)
     end
@@ -424,7 +424,7 @@ end
 
 """
     taper!(s::SACtr, width=0.05, form=:hanning)
-    taper!(S::Array{SACtr}, width=0.05, form=:hanning)
+    taper!(S::AbstractArray{SACtr}, width=0.05, form=:hanning)
 
 Apply a symmetric taper to each end of the data in SAC trace `s` or traces `S`.
 
@@ -467,7 +467,7 @@ function taper!(s::SACtr, width=0.05, form=:hanning::Symbol)
 
     SAC.update_headers!(s)
 end
-taper!(S::Array{SACtr}, width=0.05, form::Symbol=:hamming) =
+taper!(S::AbstractArray{SACtr}, width=0.05, form::Symbol=:hamming) =
     (for s in S taper!(s, width, form) end; S)
 
 """
@@ -507,7 +507,7 @@ function update_headers!(s::SACtr)
     s
 end
 
-function update_headers!(a::Array{SACtr})
+function update_headers!(a::AbstractArray{SACtr})
     for s in a
         update_headers!(s)
     end

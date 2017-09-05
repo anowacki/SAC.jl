@@ -25,7 +25,7 @@ export
 const available_stack_methods = [:linear]
 
 """
-    stack(S::Array{SACtr}, time_range, align=zeros(length(S)), weight; method=:linear) -> s::SACtr
+    stack(S::AbstractArray{SACtr}, time_range, align=zeros(length(S)), weight; method=:linear) -> s::SACtr
 
 Return the linear stack of all traces in `S`, aligned in time on the
 value in `align`, between `times[1]` and `times[end]`.
@@ -44,7 +44,7 @@ if not all traces can be included in the stack.
 If provided, traces are weighted by the values in `weight`, which are normalised
 to sum to unity.
 """
-function stack(S::Array{SAC.SACtr}, time_range,
+function stack(S::AbstractArray{SAC.SACtr}, time_range,
                align::Union{Symbol,AbstractArray}=zeros(SAC.SACFloat, length(S)),
                weight=ones(SAC.SACFloat, length(S));
                method=:linear)

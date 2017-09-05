@@ -122,14 +122,14 @@ _write_string(F::IOStream, x::String, maxlen::Integer) =
 end
 @doc """
     write(s::SACtr, file; byteswap)
-    write(S::Array{SACtr}, files; byteswap)
+    write(S::AbstractArray{SACtr}, files; byteswap)
 
 Write a SAC trace `s` to `file`, or a set of traces `S` to a set of files `files`.
 Set `byteswap` to `false` to force writing in native-endian format; set to `true`
 to write bigendian files (MacSAC type).  The default is to write bigendian format.
 """ write
 
-function write(s::Array{SACtr}, file::Array{String}; args...)
+function write(s::AbstractArray{SACtr}, file::Array{String}; args...)
     length(s) == length(file) || error("SAC.write: Arrays must be same length")
     for i = 1:length(s)
         write(s[i], file[i]; args...)

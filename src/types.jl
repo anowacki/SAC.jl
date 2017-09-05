@@ -110,18 +110,18 @@ parts of files are read without error.
 end
 
 """
-    getindex(A::Array{SACtr}, s::Symbol) -> Array{typeof(A[:].s)}
+    getindex(A::AbstractArray{SACtr}, s::Symbol) -> Array{typeof(A[:].s)}
     A[:s] -> Array{typeof(A[:].s)}
 
 Return an array of values containing the header with name `s` for the SACtr
 traces.  This allows one to get all the headers values by doing A[:kstnm],
 for example.
 """
-getindex(A::Array{SACtr}, s::Symbol) = Array{typeof(getfield(A[1], s))}([getfield(a, s) for a in A])
+getindex(A::AbstractArray{SACtr}, s::Symbol) = Array{typeof(getfield(A[1], s))}([getfield(a, s) for a in A])
 getindex(t::SACtr, s::Symbol) = getfield(t, s) # Also define for single trace for consistency
 
 """
-    setindex!(A::Array{SACtr}, value, s::Symbol)
+    setindex!(A::AbstractArray{SACtr}, value, s::Symbol)
     A[:s] = value
 
 Set the header with name `s` for all the SACtr traces in the array `A`.  This
@@ -133,7 +133,7 @@ or
 
     A[:user0] = 1:length(A)
 """
-function setindex!(A::Array{SACtr}, V, s::Symbol)
+function setindex!(A::AbstractArray{SACtr}, V, s::Symbol)
     fieldtype = typeof(getfield(A[1], s))
     if length(A) == length(V)
         for (a, v) in zip(A, V)

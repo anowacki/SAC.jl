@@ -24,7 +24,7 @@ function bandpass!(s::SACtr, c1::Number, c2::Number;
     apply_filter!(s, f, passes)
 end
 
-function bandpass!(a::Array{SACtr}, c1, c2; ftype=:butterworth, npoles=sac_npoles,
+function bandpass!(a::AbstractArray{SACtr}, c1, c2; ftype=:butterworth, npoles=sac_npoles,
         passes=sac_passes)
     for s in a
         bandpass!(s, c1, c2; ftype=ftype, npoles=npoles, passes=passes)
@@ -54,7 +54,7 @@ function highpass!(s::SACtr, c::Number;
     apply_filter!(s, f, passes)
 end
 
-function highpass!(a::Array{SACtr}, c;
+function highpass!(a::AbstractArray{SACtr}, c;
         ftype=:butterworth, npoles=sac_npoles, passes=sac_passes)
     for s in a
         highpass!(s, c; ftype=ftype, npoles=npoles, passes=passes)
@@ -83,7 +83,7 @@ function lowpass!(s::SACtr, c::Number;
     apply_filter!(s, f, passes)
 end
 
-function lowpass!(a::Array{SACtr}, c;
+function lowpass!(a::AbstractArray{SACtr}, c;
         ftype=:butterworth, npoles=sac_npoles, passes=sac_passes)
     for s in a
         lowpass!(s, c; ftype=ftype, npoles=npoles, passes=passes)
