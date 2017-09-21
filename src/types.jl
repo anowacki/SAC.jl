@@ -44,6 +44,11 @@ is accessed through the field name `t`.  Supply the constant sampling interval `
 in seconds, and the number of points in the trace `t`.  Optionally, specify the trace
 start time `b` in seconds.
 
+    SACtr(v::AbstractVector, delta, b=0.) -> ::SACtr
+
+Construct a `SACtr` by supplying an array `v`, sampling interval `delta` and optionally
+the starting time.
+
     SACtr(d::Vector{UInt8}, file=""; swap=true, terse=false, check_npts=true) -> ::SACtr
 
 Construct a SACtr from a raw array of bytes representing some data in SAC format.
@@ -107,6 +112,12 @@ parts of files are read without error.
     update_headers!(trace)
     any(isundefined.([trace.gcarc, trace.az, trace.baz])) && update_great_circle!(trace)
     trace
+end
+
+function SACtr(v::AbstractVector, delta::Real, b=0.0)
+    s = SACtr(delta, length(v), b)
+    s.t .= v
+    s
 end
 
 """
