@@ -228,7 +228,6 @@ Resample a SAC trace by supplying one of three things:
 Interpolation is performed using quadratic splines using the `Dierckx` package.
 """
 function interpolate!(s::SACtr; npts::Integer=0, delta::Real=0.0, n::Integer=0)
-    isdefined(:Dierckx) || @eval import Dierckx
     # Calculate new points at which to evaluate time series
     interp_t = if npts != 0
         npts >= 0 || error("`npts` cannot be negative")
@@ -250,7 +249,7 @@ function interpolate!(s::SACtr; npts::Integer=0, delta::Real=0.0, n::Integer=0)
     end
     @assert npts == length(interp_t)
     # Create fit using degree-2 Bsplines
-    spl = Dierckx.Spline1D(SAC.time(s), s.t, k=2)
+    spl = Dierckx.Spline1D(collect(SAC.time(s)), s.t, k=2)
     s.t = Dierckx.evaluate(spl, interp_t)
     s.npts = npts
     s.delta = delta

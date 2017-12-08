@@ -7,7 +7,7 @@ Sister library SACPlot.jl can be used for plotting.
 """
 module SAC
 
-import DSP
+import DSP, Dierckx
 import Glob
 import Base: ==, copy, getindex, fft, setindex!, time, write
 
@@ -97,6 +97,15 @@ for (name, abbrev) in copying_funcs
             const $new_abbrev = $new_name
             export $new_abbrev
         end
+    end
+end
+
+# Build methods which can be used with chaining (`|>`)
+for (name, abbrev) in copying_funcs
+    new_name = Symbol(string(name)[1:end-1])
+    @eval begin
+        ($name)(args...; kwargs...) = s -> ($name)(s, args...; kwargs...)
+        ($new_name)(args...; kwargs...) = s -> ($new_name)(s, args...; kwargs...)
     end
 end
 
