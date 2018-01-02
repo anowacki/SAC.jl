@@ -114,7 +114,9 @@ _write_string(F::IOStream, x::String, maxlen::Integer) =
         $([:(_write_swap(byteswap, f, SACInt(s.$s))) for s in sac_bool_hdr]...)
         # No byte-swapping needed for characters, but pad them to the correct length
         _write_string(f, s.kstnm, saccharlen)
-        _write_string(f, s.kevnm, 2*saccharlen)
+        # Handle special case of double-length kevnm  header
+        kevnm = isundefined(s.kevnm) ? "-12345  -12345  " : s.kevnm
+        _write_string(f, kevnm, 2*saccharlen)
         $([:(_write_string(f, s.$s, saccharlen)) for s in sac_char_hdr[3:end]]...)
         # Trace
         _write_swap(byteswap, f, s.t)

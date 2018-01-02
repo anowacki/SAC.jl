@@ -91,8 +91,8 @@ parts of files are read without error.
     # Character part
     # kevnm header is double length, so split into two then recombine
     char_sym_list = [sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]]
-    $([:($s = ascii(String(reinterpret(UInt8, data[(($i-1)*clen)+1+off:$i*clen+off])))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
-    kevnm = kevnm1 * kevnm2
+    $([:($s = strip(String(data[(($i-1)*clen)+1+off:$i*clen+off]))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
+    kevnm = (kevnm1 == sac_cnull) ? sac_cnull : strip(rpad(kevnm1, clen) * kevnm2)
     off += (length(sac_char_hdr) + 1)*clen
 
     # Check length
