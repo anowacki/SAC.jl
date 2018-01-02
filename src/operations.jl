@@ -84,7 +84,7 @@ Select the mode of numerical differentiation with `npoints`.
   reduced by 1.
 - `npoints == 3`: Three-point. `dsdt.t[i] = (s.t[i+1] - s.t[i-1])/(2 * s.delta)`.
   Central difference.  `s.b` is increased by `s.delta`; `npts` reduced by 2.
-- `npoints == 3`: Five-point. `dsdt.t[i] =
+- `npoints == 5`: Five-point. `dsdt.t[i] =
   (2/3)*(s.t[i+1] - s.t[i-1])/s.delta - (1/12)*(s.t[i+2] - s.t[i-2])/s.delta`.
   Central difference.  `s.b` is increased by `2s.delta`; `npts` reduced by 4.
 """
@@ -163,7 +163,6 @@ Return the Fourier-transformed trace from `s` as `S`, with the frequencies
 which correspond to each point in `f`.
 """
 function fft(s::SACtr)
-    # Return the fourier-transformed trace and the frequencies to go along with it
     N = round(Int, s.npts/2) + 1
     fmax = 1./(s.npts*s.delta)
     f = collect(1:N)*fmax
@@ -172,7 +171,6 @@ function fft(s::SACtr)
 end
 
 function fft(a::AbstractArray{SACtr})
-    # Return arrays containing f and S for an array of SACtr objects
     n = length(a)
     f, S = Array{Array}(n), Array{Array}(n)
     for i = 1:n
@@ -275,7 +273,6 @@ const mul! = multiply!
 Remove the mean in-place for a SAC trace.
 """
 function rmean!(s::SACtr)
-    # Remove the mean in-place
     s.t = s.t - mean(s.t)
     update_headers!(s)
 end
@@ -408,7 +405,6 @@ rotate_to_gcp(a::AbstractArray{SACtr}, args...) = rotate_to_gcp!(deepcopy(a), ar
 Remove the trend from a SAC trace in place.
 """
 function rtrend!(s::SACtr)
-    # Remove the trend in-place
     t = time(s)
     x0, x1 = linreg(t, s.t)
     s.t = s.t - (x0 + x1*t)
