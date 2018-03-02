@@ -34,9 +34,11 @@ export
     rotate_to_gcp,
     rtrend!,
     sample,
+    stalta,
     taper!,
     time,
     tshift!,
+    window_average,
     write
 
 include("constants.jl")
@@ -46,6 +48,7 @@ include("io.jl")
 include("operations.jl")
 include("filtering.jl")
 include("util.jl")
+include("statistics.jl")
 
 # Submodules
 include("Stack.jl")

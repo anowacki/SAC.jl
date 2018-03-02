@@ -8,4 +8,5 @@ using Base.Test
     include("stack.jl")
     include("great_circle.jl")
     include("rotate_to_gcp.jl")
+    include("statistics.jl")
 end
