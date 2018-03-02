@@ -68,6 +68,8 @@ using SAC, Base.Test
     end
     teststring = VERSION < v"0.6-" ?
         "SAC.SACtr[SAC.SACtr(delta=1.0, b=0.0, npts=1),SAC.SACtr(delta=1.0, b=0.0, npts=1)]" :
+        VERSION >= v"0.7-" ?
+        "SACtr[SAC.SACtr(delta=1.0, b=0.0, npts=1), SAC.SACtr(delta=1.0, b=0.0, npts=1)]" :
         "SAC.SACtr[SAC.SACtr(delta=1.0, b=0.0, npts=1), SAC.SACtr(delta=1.0, b=0.0, npts=1)]"
     @test begin
         open(tempfile, "w") do f
