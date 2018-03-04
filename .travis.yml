@@ -14,6 +14,11 @@ addons:
     packages:
     - gfortran
 
+before_install:
+    - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+            brew install gcc;
+        fi
+
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
   - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("SAC"); Pkg.test("SAC"; coverage=true)'
