@@ -16,8 +16,9 @@ addons:
 
 before_install:
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
+            brew cask uninstall oclint;
             brew install gcc;
-        fi
+      fi
 
 script:
   - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
