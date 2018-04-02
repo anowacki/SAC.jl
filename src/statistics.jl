@@ -22,7 +22,7 @@ stalta(s::SACtr, t, ws, wl) = window_average(s, t, ws)/window_average(s, t-wl-s.
 
 function stalta(s::SACtr, t1, t2, ws, wl)
    n = round(Int, (t2 - t1)/s.delta) + 1
-   ratio = Array{eltype(s.t)}(n)
+   ratio = Array{eltype(s.t)}(undef, n)
    for i in 1:n
        t = t1 + (i-1)*s.delta
        ratio[i] = stalta(s, t, ws, wl)

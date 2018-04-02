@@ -63,7 +63,7 @@ function cut!(a::AbstractArray{SACtr}, bh::Symbol, b::Real, eh::Symbol, e::Real)
     a
 end
 
-function cut!{B<:Real,E<:Real}(a::AbstractArray{SACtr}, b::Array{B}, e::Array{E})
+function cut!(a::AbstractArray{SACtr}, b::Array{B}, e::Array{E}) where {B<:Real,E<:Real}
     @assert length(a) == length(b) == length(e) "Arrays `a`, `b` and `e` must be the same length"
     for (s, beg, en) in zip(a, b, e)
         SAC.cut!(s, beg, en)
@@ -92,7 +92,7 @@ function differentiate!(s::SACtr, npoints::Integer=2)
     npoints in (2, 3, 5) ||
         throw(ArgumentError("`npoints` cannot be $(npoints); must be one of (2, 3, 5)"))
     if npoints == 2
-        t = Vector{SACFloat}(s.npts - 1)
+        t = Vector{SACFloat}(undef, s.npts - 1)
         @inbounds for i in 1:(s.npts-1)
             s.t[i] = (s.t[i+1] - s.t[i])/s.delta
         end
@@ -138,8 +138,8 @@ end
 Divide the values in a SAC trace by `value`
 """
 function divide!(a::AbstractArray{SACtr}, value)
-    value != 0. || error("SAC.divide!: Cannot divide by 0")
-    multiply!(a, 1./value)
+    value != 0 || error("SAC.divide!: Cannot divide by 0")
+    multiply!(a, 1.0/value)
 end
 divide!(s::SACtr, value) = divide!([s], value)
 
@@ -164,7 +164,7 @@ which correspond to each point in `f`.
 """
 function fft(s::SACtr)
     N = round(Int, s.npts/2) + 1
-    fmax = 1./(s.npts*s.delta)
+    fmax = 1.0/(s.npts*s.delta)
     f = collect(1:N)*fmax
     S = Base.fft(s.t)[1:N]
     return f, S
@@ -273,7 +273,7 @@ const mul! = multiply!
 Remove the mean in-place for a SAC trace.
 """
 function rmean!(s::SACtr)
-    s.t = s.t - mean(s.t)
+    s.t = s.t .- mean(s.t)
     update_headers!(s)
 end
 function rmean!(a::AbstractArray{SACtr})
@@ -323,7 +323,7 @@ function rotate_through!(a::AbstractArray{SACtr}, phi::Real)
     end
     a
 end
-function rotate_through!{T<:Real}(a::AbstractArray{SACtr}, phi::AbstractArray{T})
+function rotate_through!(a::AbstractArray{SACtr}, phi::AbstractArray{<:Real})
     length(a)%2 != 0 &&
         throw(ArgumentError("SAC.rotate_through!: Array of traces must be a multiple of two long"))
     if length(phi) == length(a)
@@ -347,7 +347,7 @@ end
 Copying version of `rotate_through` which returns modified versions of the traces
 in `s1` and `s2`, leaving the originals unaltered.  See docs of `rotate_through!` for details.
 """
-function rotate_through{T<:Union{SACtr,AbstractArray{SACtr}}}(s1::T, s2::T, phi)
+function rotate_through(s1::T, s2::T, phi) where {T<:Union{SACtr,AbstractArray{SACtr}}}
     s1_new, s2_new = deepcopy(s1), deepcopy(s2)
     rotate_through!.(s1_new, s2_new, phi)
     s1_new, s2_new
@@ -382,7 +382,7 @@ function rotate_to_gcp!(s1::SACtr, s2::SACtr, reverse::Bool=false)
     rotate_through!(s2, s1, phi) # Checks for orthogonality
     reverse && flip_component!(s2)
     s1[:kcmpnm] = sacstring("Radial")
-    s2[:kcmpnm] = sacstring((reverse?"-":"")*"Trans")
+    s2[:kcmpnm] = sacstring((reverse ? "-" : "")*"Trans")
     s1, s2
 end
 function rotate_to_gcp!(a::AbstractArray{SACtr}, reverse::Bool=false)

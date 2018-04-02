@@ -1,7 +1,7 @@
 # Definition, constructors and other operations only to do with the SACtr type
 
 # Composite type for SAC evenly-spaced time series data
-@eval type SACtr
+@eval mutable struct SACtr
     $([:($(s)::SACFloat) for s in sac_float_hdr]...)
     $([:($(s)::SACInt) for s in sac_int_hdr]...)
     $([:($(s)::SACBool) for s in sac_bool_hdr]...)
@@ -60,8 +60,8 @@ parts of files are read without error.
 
 @eval function SACtr(data::Vector{UInt8}, file=""; swap::Bool=true, terse::Bool=false,
         check_npts::Bool=true)
-    const len = sac_byte_len
-    const clen = 2*sac_byte_len
+    len = sac_byte_len
+    clen = 2*sac_byte_len
     # Determine endianness and act accordingly
     nvhdr = reinterpret(SACInt, data[sac_nvhdr_pos*len+1:(sac_nvhdr_pos+1)*len])[1]
     native = if nvhdr == sac_ver_num
@@ -173,7 +173,7 @@ Return `true` if the traces `a` and `b` are equal (that is, have all fields the 
 and `false` otherwise.
 """
 function (==)(a::SACtr, b::SACtr)
-    for f in fieldnames(a)
+    for f in fieldnames(SACtr)
         if getfield(a, f) != getfield(b, f)
             return false
         end

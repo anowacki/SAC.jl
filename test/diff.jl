@@ -1,5 +1,6 @@
 # Test the differentiate function
-using SAC, Base.Test
+using Compat.Test
+using SAC
 
 @testset "Differentiation" begin
     sample_data = SAC.sample()

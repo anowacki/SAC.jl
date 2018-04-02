@@ -19,7 +19,11 @@ const saccharlen = 8
 const sac_ver_num = SACInt(6)
 # Whether this machine is big- or little endian.  SAC files are meant to be big-endian,
 # so this determines whether a file is 'native-endian' or not.
-const machine_is_little_endian = bits(1)[end] == '1'
+# TODO: Remove when we drop v0.6 support
+if VERSION < v"0.7-"
+    const bitstring = bits
+end
+const machine_is_little_endian = bitstring(1)[end] == '1'
 
 # Convert a number into a SACChar
 sacstring(x, maxlen=saccharlen) = sacchar(string(x)[1:minimum((length(string(x)),maxlen))]*" "^(maximum((0,maxlen-length(string(x))))))
@@ -66,7 +70,7 @@ const sac_char_hdr = [:kstnm, :kevnm, :khole, :ko, :ka, :kt0,
 const sac_all_hdr = [sac_float_hdr; sac_int_hdr; sac_bool_hdr; sac_char_hdr]
 
 # Where in the file the NVHDR value is
-const sac_nvhdr_pos = length(sac_float_hdr) + find(sac_int_hdr .== :nvhdr)[1] - 1
+const sac_nvhdr_pos = length(sac_float_hdr) + findfirst(sac_int_hdr .== :nvhdr) - 1
 
 # Length in bytes of total SAC header, accounting for double-length kevnm
 const sac_header_len = sac_byte_len*(length(sac_float_hdr) + length(sac_int_hdr) +

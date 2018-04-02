@@ -1,5 +1,7 @@
 # Test stacking of SAC traces
-using SAC, Base.Test
+using Compat
+using Compat.Test
+using SAC
 
 normal_dist(x, μ, σ) = exp(-(x - μ)/2σ^2)/sqrt(2σ^2*π)
 
@@ -17,7 +19,7 @@ normal_dist(x, μ, σ) = exp(-(x - μ)/2σ^2)/sqrt(2σ^2*π)
         e = 10
         npts = round(Int, (e - b)/delta) + 1
 
-        S = Array{SACtr}(N)
+        S = Array{SACtr}(undef, N)
         for i in 1:N
             S[i] = SACtr(delta, npts, b)
             S[i].t[:] = normal_dist.(time(S[i]), μ[i], σ)

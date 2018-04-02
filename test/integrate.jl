@@ -1,5 +1,6 @@
 # Test the integrate function
-using SAC, Base.Test
+using Compat.Test
+using SAC
 
 @testset "Integration" begin
     sample_data = SAC.sample()

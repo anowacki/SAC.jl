@@ -7,6 +7,9 @@ Sister library SACPlot.jl can be used for plotting.
 """
 module SAC
 
+using Compat
+using Compat.LinearAlgebra
+
 import DSP, Dierckx
 import Glob
 import Base: ==, copy, getindex, fft, setindex!, time, write

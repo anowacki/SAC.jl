@@ -1,5 +1,6 @@
 # Test the creation of SACtr's
-using SAC, Base.Test
+using Compat.Test
+using SAC
 
 @testset "Construction" begin
     let npts = 1000, delta = 1, b = -5

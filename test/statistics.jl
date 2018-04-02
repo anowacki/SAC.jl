@@ -1,5 +1,7 @@
 # Test statistical measures of traces
-using SAC, Base.Test
+import Compat: argmax
+using Compat.Test
+using SAC
 
 @testset "Statistics" begin
     @testset "Window average" begin
@@ -33,7 +35,7 @@ using SAC, Base.Test
             s′ = stalta(s, t1, t2)
             n = npts - t1 - t2 - 3
             @test s′.npts == n
-            @test time(s′)[indmax(s′.t)] ≈ 1.0
+            @test time(s′)[argmax(s′.t)] ≈ 1.0
         end
     end
 end

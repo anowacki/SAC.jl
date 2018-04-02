@@ -17,7 +17,7 @@ function bandpass!(s::SACtr, c1::Number, c2::Number;
         ftype=:butterworth, npoles::Integer=sac_npoles, passes::Integer=sac_passes)
     c1 >= c2 && error("SAC.bandpass: Upper corner must be larger than lower corner")
     ftype in available_filters || throw(ArgumentError("'$ftype' is not a valid filter type"))
-    response = DSP.Bandpass(c1, c2; fs=1./s.delta)
+    response = DSP.Bandpass(c1, c2; fs=1.0/s.delta)
     prototype = get_filter_prototype(ftype, npoles)
     # Create apply the filter
     f = DSP.digitalfilter(response, prototype)
@@ -48,7 +48,7 @@ function highpass!(s::SACtr, c::Number;
         ftype=:butterworth, npoles::Integer=sac_npoles,
         passes::Integer=sac_passes)
     ftype in available_filters || throw(ArgumentError("'$ftype' is not a valid filter type"))
-    response = DSP.Highpass(c; fs=1./s.delta)
+    response = DSP.Highpass(c; fs=1.0/s.delta)
     prototype = get_filter_prototype(ftype, npoles)
     f = DSP.digitalfilter(response, prototype)
     apply_filter!(s, f, passes)
@@ -77,7 +77,7 @@ Set number of poles with `npoles`.
 function lowpass!(s::SACtr, c::Number;
         ftype=:butterworth, npoles::Integer=sac_npoles, passes::Integer=sac_passes)
     ftype in available_filters || throw(ArgumentError("'$ftype' is not a valid filter type"))
-    response = DSP.Lowpass(c; fs=1./s.delta)
+    response = DSP.Lowpass(c; fs=1.0/s.delta)
     prototype = get_filter_prototype(ftype, npoles)
     f = DSP.digitalfilter(response, prototype)
     apply_filter!(s, f, passes)

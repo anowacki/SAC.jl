@@ -1,5 +1,6 @@
 # Test rotation to great circle path
-using SAC, Base.Test
+using Compat.Test
+using SAC
 
 @testset "Great circle path rotation" begin
     # The azimuth and distance of the event

@@ -110,4 +110,4 @@ traces_are_orthogonal(s1::SACtr, s2::SACtr, tol=eps(SACFloat)) =
 
 Return a FloatRange `t` which contains the times for each sample of the SAC trace.
 """
-time(s::SACtr) = s.b + (0:s.npts-1)*s.delta
+time(s::SACtr) = s.b .+ (0:s.npts-1)*s.delta

@@ -81,8 +81,8 @@ for all the traces.
 
 The trace starts at time `t1` and has sample spacing `delta`.
 """
-function _stack_linear{A<:AbstractArray}(a::Vector{A}, delta::Real, b::Vector,
-        delay::Vector, t1::Real, t2::Real)
+function _stack_linear(a::Vector{A}, delta::Real, b::Vector,
+        delay::Vector, t1::Real, t2::Real) where {A<:AbstractArray}
     N, npts, b_shift, stack_trace = _stack_array(a, delta, b, delay, t1, t2)
     # stack_trace checks that we are always in array bounds
     @inbounds for j in 1:N
@@ -102,7 +102,7 @@ Return the number of traces `N`, the number of points in the output stack trace,
 for the stack itself, `stack_trace`.  This routine also checks that the input
 arrays are the required length and no points are missing from the desired stack.
 """
-function _stack_array{A<:AbstractArray}(a::Vector{A}, delta, b, delay, t1, t2)
+function _stack_array(a::Vector{A}, delta, b, delay, t1, t2) where {A<:AbstractArray}
     N = length(a)
     length(b) == length(delay) == N ||
         throw(ArgumentError("Lengths of `a`, `b` and `delay` must all be the same"))

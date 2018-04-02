@@ -1,5 +1,6 @@
 # Test reading and writing of SAC files
-using SAC, Base.Test
+using Compat.Test
+using SAC
 
 @testset "IO" begin
     tempfile = tempname()
@@ -64,7 +65,7 @@ using SAC, Base.Test
         open(tempfile, "w") do f
             show(f, SAC.SACtr(1, 1))
         end
-        readstring(tempfile) == "SAC.SACtr(delta=1.0, b=0.0, npts=1)"
+        read(tempfile, String) == "SAC.SACtr(delta=1.0, b=0.0, npts=1)"
     end
     teststring = VERSION < v"0.6-" ?
         "SAC.SACtr[SAC.SACtr(delta=1.0, b=0.0, npts=1),SAC.SACtr(delta=1.0, b=0.0, npts=1)]" :
@@ -75,6 +76,6 @@ using SAC, Base.Test
         open(tempfile, "w") do f
             show(f, [SAC.SACtr(1, 1), SAC.SACtr(1, 1)])
         end
-        readstring(tempfile) == teststring
+        read(tempfile, String) == teststring
     end
 end

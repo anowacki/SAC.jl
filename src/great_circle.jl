@@ -80,8 +80,8 @@ given a reference point and a distance and azimuth to project.
 
 Coordinates and azimuth are in radians.
 """
-function vincentypt{T<:AbstractFloat}(f::T, a::T, phi1::T, lembda1::T, alpha12::T, s::T)
-    const two_pi = 2π
+function vincentypt(f::T, a::T, phi1::T, lembda1::T, alpha12::T, s::T) where {T<:AbstractFloat}
+    two_pi = 2π
     if alpha12 < 0.0
         alpha12 = alpha12 + two_pi
     end
@@ -144,7 +144,7 @@ function vincentypt{T<:AbstractFloat}(f::T, a::T, phi1::T, lembda1::T, alpha12::
 
 end
 
-function vincentypt{T<:AbstractFloat}(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, alpha12::Array{T,1}, s::Array{T,1})
+function vincentypt(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, alpha12::Array{T,1}, s::Array{T,1}) where {T<:AbstractFloat}
     lenphi = length(phi1)
     @assert lenphi == length(lembda1)
     @assert lenphi == length(alpha12)
@@ -158,9 +158,9 @@ function vincentypt{T<:AbstractFloat}(f::T, a::T, phi1::Array{T,1}, lembda1::Arr
     return phi2, lembda2, alpha21
 end
 
-vincentypt{T<:AbstractFloat}(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, alpha12::Array{T,1}, s::T) = vincentypt(f, a, phi1, lembda1, alpha12, ones(length(phi1)) * s)
-vincentypt{T<:AbstractFloat}(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, alpha12::T, s::Array{T,1}) = vincentypt(f, a, phi1, lembda1, ones(length(phi1)) * alpha12, s)
-vincentypt{T<:AbstractFloat}(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, alpha12::T, s::T) = vincentypt(f, a, phi1, lembda1, ones(length(phi1)) * alpha12, ones(length(phi1)) * s)
+vincentypt(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, alpha12::Array{T,1}, s::T) where {T<:AbstractFloat} = vincentypt(f, a, phi1, lembda1, alpha12, ones(length(phi1)) * s)
+vincentypt(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, alpha12::T, s::Array{T,1}) where {T<:AbstractFloat} = vincentypt(f, a, phi1, lembda1, ones(length(phi1)) * alpha12, s)
+vincentypt(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, alpha12::T, s::T) where {T<:AbstractFloat} = vincentypt(f, a, phi1, lembda1, ones(length(phi1)) * alpha12, ones(length(phi1)) * s)
 
 
 """
@@ -172,8 +172,8 @@ and the forward and reverse azimuths between these points.
 Latitude, longitude and (back)azimuth are in radians; distances are in the units
 provided for the semimajor axis length.
 """
-function vincentydist{T<:AbstractFloat}(f::T, a::T, phi1::T, lembda1::T, phi2::T, lembda2::T)
-    const two_pi = 2π
+function vincentydist(f::T, a::T, phi1::T, lembda1::T, phi2::T, lembda2::T) where {T<:AbstractFloat}
+    two_pi = 2π
     if (abs( phi2 - phi1 ) < 1e-8) & ( abs( lembda2 - lembda1) < 1e-8 )
         return 0.0, 0.0, 0.0
     end
@@ -243,7 +243,7 @@ function vincentydist{T<:AbstractFloat}(f::T, a::T, phi1::T, lembda1::T, phi2::T
     return s, alpha12, alpha21
 end
 
-function vincentydist{T<:AbstractFloat}(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, phi2::Array{T,1}, lembda2::Array{T,1})
+function vincentydist(f::T, a::T, phi1::Array{T,1}, lembda1::Array{T,1}, phi2::Array{T,1}, lembda2::Array{T,1}) where {T<:AbstractFloat}
     lenphi = length(phi1)
     @assert lenphi == length(lembda1)
     @assert lenphi == length(phi2)
@@ -257,5 +257,5 @@ function vincentydist{T<:AbstractFloat}(f::T, a::T, phi1::Array{T,1}, lembda1::A
     return s, alpha12, alpha21
 end
 
-vincentydist{T<:AbstractFloat}(f::T, a::T, phi1::T, lembda1::Array{T,1}, phi2::T, lembda2::Array{T,1}) = vincentydist(f, a, phi1 * ones(lembda1), lembda1, phi2 * ones(lembda1), lembda2)
-vincentydist{T<:AbstractFloat}(f::T, a::T, phi1::Array{T,1}, lembda1::T, phi2::Array{T,1}, lembda2::T) = vincentydist(f, a, phi1, lembda1 * ones(phi1), phi2, lembda2 * ones(phi1))
+vincentydist(f::T, a::T, phi1::T, lembda1::Array{T,1}, phi2::T, lembda2::Array{T,1}) where {T<:AbstractFloat} = vincentydist(f, a, phi1 * ones(lembda1), lembda1, phi2 * ones(lembda1), lembda2)
+vincentydist(f::T, a::T, phi1::Array{T,1}, lembda1::T, phi2::Array{T,1}, lembda2::T) where {T<:AbstractFloat} = vincentydist(f, a, phi1, lembda1 * ones(phi1), phi2, lembda2 * ones(phi1))

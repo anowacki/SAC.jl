@@ -32,8 +32,8 @@ In either case, a warning is issued unless `terse` is `true`.
 """
 function read_cut(file, hb::Symbol, b::Real, he::Symbol, e::Real; swap=true, terse=false)
     b < e || throw(ArgumentError("Start cut must be before stop cut"))
-    const len = sac_byte_len
-    const clen = 2*sac_byte_len
+    len = sac_byte_len
+    clen = 2*sac_byte_len
     open(file, "r") do f
         header = Base.read(f, sac_header_len)
         # Determine endianness and act accordingly
