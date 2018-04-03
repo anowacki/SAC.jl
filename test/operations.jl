@@ -121,4 +121,31 @@ end
         @test s1 * s2 == s2 * s1
         @test s1/s2 == s1*1/s2
     end
+    
+    ## Trend and mean
+    # Single trace
+    let s = SACtr([i%2 for i in 1:1000], 0.01)
+        @test s[:depmen] ≈ 0.5
+        @test rmean(s)[:depmen] ≈ 0.0
+        rmean!(s)
+        @test s[:depmen] ≈ 0.0
+    end
+    let s = SACtr([i for i in 1:100], 0.1)
+        @test all(isapprox.(rtrend(s)[:t], 0.0, atol=1e5))
+        rtrend!(s)
+        @test all(isapprox.(s[:t], 0.0, atol=1e-5))
+    end
+    # Arrays
+    let a = [SAC.sample() for _ in 1:5], s = SAC.sample()
+        @test all(rmean(a) .== rmean(s))
+        rmean!(a)
+        rmean!(s)
+        @test all(a .== s)
+    end
+    let a = [SAC.sample() for _ in 1:5], s = SAC.sample()
+        @test all(rtrend(a) .== rtrend(s))
+        rtrend!(a)
+        rtrend!(s)
+        @test all(s .== s)
+    end
 end
