@@ -117,6 +117,7 @@ end
 function SACtr(v::AbstractVector, delta::Real, b=0.0)
     s = SACtr(delta, length(v), b)
     s.t .= v
+    update_headers!(s)
     s
 end
 
@@ -132,39 +133,43 @@ getindex(A::AbstractArray{SACtr}, s::Symbol) = Array{typeof(getfield(A[1], s))}(
 getindex(t::SACtr, s::Symbol) = getfield(t, s) # Also define for single trace for consistency
 
 """
+    setindex!(s::SACtr, value, s::Symbol)
+    s[s] = value
+
+Set the header with name `s` (a `Symbol`) to `value`.  E.g.:
+
+    A[:kevnm] = "Blast 1"
+
     setindex!(A::AbstractArray{SACtr}, value, s::Symbol)
-    A[:s] = value
+    A[s] = value
 
 Set the header with name `s` for all the SACtr traces in the array `A`.  This
 allows one to set all the headers at once for a set of traces by doing e.g.:
 
-    A[:kevnm] = "Blast 1"
-
-or
-
     A[:user0] = 1:length(A)
+
+#### Setting trace values
+
+When setting the values of the trace, use `s[:t] = k`.  This will automatically
+update headers to reflect the trace and use broadcasting internally so that
+the trace cannot be set to the wrong length.  Note however that a
+broadcast assignment (`s[:t] .= k`) will not update the headers; this can be
+done manually with `SAC.update_headers!(s)`.
+
+    s[:t] = 1:s[:npts] # Sets to trace to be a line with constant slope
+    s[:t] = sin.(2π*time(s)) # Sets the trace to a sine function
 """
-function setindex!(A::AbstractArray{SACtr}, V, s::Symbol)
-    fieldtype = typeof(getfield(A[1], s))
-    if length(A) == length(V)
-        for (a, v) in zip(A, V)
-            setfield!(a, s, convert(fieldtype, v))
-        end
-    elseif length(V) == 1
-        for a in A
-            setfield!(a, s, convert(fieldtype, V))
-        end
-    else
-        error("Number of header values must be one or the number of traces")
-    end
-    s in (:evlo, :evla, :stlo, :stla) && update_great_circle!.(A)
-    A
-end
 function setindex!(t::SACtr, v, s::Symbol)
-    setfield!(t, s, convert(typeof(getfield(t, s)), v))
-    s in (:evlo, :evla, :stlo, :stla) && update_great_circle!(t)
+    if s == :t
+        t.t .= v
+        update_headers!(t)
+    else
+        setfield!(t, s, convert(typeof(getfield(t, s)), v))
+        s in (:evlo, :evla, :stlo, :stla) && update_great_circle!(t)
+    end
     t
 end
+setindex!(A::AbstractArray{SACtr}, V, s::Symbol) = setindex!.(A, V, s)
 
 """
     (==)(a::SACtr, b::SACtr) -> ::Bool

@@ -1,16 +1,205 @@
 # Trace operations
 
+# Linear operations on the trace
 """
-    add!(::SACtr, value)
+    add!(s::SACtr, value) -> s
 
-Add a constant value to a SAC trace
+Add a constant `value` to a SAC trace `s` in place.
 """
-function add!(a::AbstractArray{SACtr}, val)
-    for s in a s.t[:] = s.t[:] + val end
-    update_headers!(a)
+function add!(s::SACtr, val)
+    s.t .= s.t .+ val
+    update_headers!(s)
 end
-add!(s::SACtr, val) = add!([s], val)
 
+"""
+    add(s::SACtr, value) -> s_new
+    s + value
+    value + s
+
+Add a constant `value` to a SAC trace `s` and return a new trace `s_new`.
+"""
+add(s::SACtr, val) = add!(deepcopy(s), val)
+
+Base.:+(s::SACtr, val) = add(s, val)
+Base.:+(val, s::SACtr) = add(s, val)
+
+"""
+    subtract!(s::SACtr, value) -> s
+
+Substract a constant `value` to a SAC trace `s` in place.
+"""
+subtract!(s::SACtr, val) = add!(s, -val)
+
+"""
+    subtract(s::SACtr, value) -> s_new
+    s - value
+    value - s
+
+Subtract a constant `value` from a SAC trace `s` (or vice versa) and
+return a new trace `s_new`.
+"""
+subtract(s::SACtr, val) = subtract!(deepcopy(s), val)
+
+Base.:-(s::SACtr, val) = add(s, -val)
+Base.:-(val, s::SACtr) = add(-s, val)
+Base.:-(s::SACtr) = multiply(s, -1)
+
+"""
+    multiply!(s::SACtr, value) -> s
+    mul!(s::SACtr, value) -> s
+
+Multiply the values in a SAC trace `s` by `value`.
+"""
+function multiply!(s::SACtr, val)
+    s.t .= s.t .* val
+    update_headers!(s)
+end
+const mul! = multiply!
+
+"""
+    multiply(s::SACtr, value) -> s_new
+    s * value
+    value * s
+
+Multiply the trace `s` by `value` and return a new trace `s_new`.
+"""
+multiply(s::SACtr, val) = multiply!(deepcopy(s), val)
+
+Base.:*(s::SACtr, val) = multiply(s, val)
+Base.:*(val, s::SACtr) = multiply(s, val)
+
+"""
+    divide!(s::SACtr, value) -> s
+
+Divide the values in a SAC trace `s` by `value` in place.
+"""
+function divide!(s::SACtr, value)
+    value != 0 || error("SAC.divide!: Cannot divide by 0")
+    multiply!(s, 1.0/value)
+end
+
+"""
+    divide(s::SACtr, value) -> s_new
+    s / value
+    value + s
+
+Divide a SAC trace `s` by `value` and a return a new trace `s_new`.
+"""
+function divide!(value, s::SACtr)
+    s.t .= value ./ s.t
+    update_headers!(s)
+end
+
+divide(s::SACtr, value) = divide!(deepcopy(s), value)
+divide(value, s::SACtr) = divide!(value, deepcopy(s))
+
+Base.:/(s::SACtr, val) = divide(s, val)
+Base.:/(val, s::SACtr) = divide(val, s)
+
+"""
+    modify!(s::SACtr, f) -> s
+
+Modify a SACtr trace `s` in place with the function `f`, ensuring
+that the headers are updated in the process.  `f` is applied to each
+element of `s`.
+
+For example, to square each value of a trace:
+
+```
+julia> s = SACtr(1:10, 1);
+
+julia> modify!(s, x->x^2);
+
+julia> s[:depmax]
+100.0f0
+```
+"""
+function modify!(s::SACtr, f)
+    s.t .= f.(s.t)
+    update_headers!(s)
+end
+
+"""
+    modify(s::SACtr, f) -> s_new
+
+Modify a copy of the SACtr trace `s` by the function `f`.
+
+For example, to square each value of a trace:
+
+```julia
+julia> s = SACtr(1:10, 1);
+
+julia> modify(s, x->x^2)[:depmax]
+100.0f0
+```
+"""
+modify(s::SACtr, f) = modify!(deepcopy(s), f)
+
+# Linear operations on multiple traces
+check_traces_combine(s1, s2) = begin s1.b ≈ s2.b && s1.npts == s2.npts ||
+    throw(ArgumentError("Traces must have same strart time and length")) end
+
+"""
+    add(s1::SACtr, s2::SACtr) -> total::SACtr
+    s1 + s2
+
+Return a new SACtr `total` which is the sum of the two traces `s1` and `s2`.
+"""
+function add(s1::SACtr, s2::SACtr)
+    check_traces_combine(s1, s2)
+    out = deepcopy(s1)
+    out.t .= s1.t .+ s2.t
+    update_headers!(out)
+end
+Base.:+(s1::SACtr, s2::SACtr) = add(s1, s2)
+
+"""
+    subtract(s1::SACtr, s2::SACtr) -> difference::SACtr
+    s1 - s2
+
+Return a new SACtr `difference` which is the second trace `s2` subtraced
+from the first `s1`.
+"""
+function subtract(s1::SACtr, s2::SACtr)
+    check_traces_combine(s1, s2)
+    out = deepcopy(s1)
+    out.t .= s1.t .- s2.t
+    update_headers!(out)
+end
+Base.:-(s1::SACtr, s2::SACtr) = subtract(s1, s2)
+
+"""
+    multiply(s1::SACtr, s2::SACtr) -> product::SACtr
+    s1 * s2
+
+Return a new SACtr `product` which is the result of multiplying two traces `s1`
+and `s2` together.
+"""
+function multiply(s1::SACtr, s2::SACtr)
+    check_traces_combine(s1, s2)
+    out = deepcopy(s2)
+    out.t .= s1.t .* s2.t
+    update_headers!(out)
+end
+Base.:*(s1::SACtr, s2::SACtr) = multiply(s1, s2)
+
+"""
+    divide(s1::SACtr, s2::SACtr) -> quotient::SACtr
+    s1 / s2
+
+Return a new SACtr `quotient` which is the result of dividing the first trace `s1`
+by the second `s2`.
+"""
+function divide(s1::SACtr, s2::SACtr)
+    check_traces_combine(s1, s2)
+    out = deepcopy(s1)
+    out.t .= s1.t ./ s2.t
+    update_headers!(out)
+end
+Base.:/(s1::SACtr, s2::SACtr) = divide(s1, s2)
+
+
+# Temporal operations
 """
     cut!(s::Union{SACtr,AbstractArray{SACtr}}, b, e)
     cut!(s::Union{SACtr,AbstractArray{SACtr}}, beg_head::Symbol, b, end_head::Symbol, e)
@@ -133,17 +322,6 @@ function differentiate!(s::SACtr, npoints::Integer=2)
 end
 
 """
-    divide!(::SACtr, value)
-
-Divide the values in a SAC trace by `value`
-"""
-function divide!(a::AbstractArray{SACtr}, value)
-    value != 0 || error("SAC.divide!: Cannot divide by 0")
-    multiply!(a, 1.0/value)
-end
-divide!(s::SACtr, value) = divide!([s], value)
-
-"""
     envelope!(::SACtr)
 
 Find the envelope of a SAC trace
@@ -253,19 +431,6 @@ function interpolate!(s::SACtr; npts::Integer=0, delta::Real=0.0, n::Integer=0)
     s.delta = delta
     update_headers!(s)
 end
-
-"""
-    multiply!(::SACtr, value)
-    mul!(::SACtr, value)
-
-Multiply the values in a SAC trace by `value`
-"""
-function multiply!(a::AbstractArray{SACtr}, val)
-    for s in a s.t[:] = s.t[:]*val end
-    update_headers!(a)
-end
-multiply!(s::SACtr, val) = multiply!([s], val)
-const mul! = multiply!
 
 """
     rmean!(::SACtr)

@@ -150,16 +150,13 @@ Returns an array of SACtr types `A`, and an array of file names `files`.
 are returned and a warning message printed.
 """
 function read_wild(pat::String, dir::String="."; echo::Bool=true)
-    # Return an array of SACtr types, and an array which gives the file path
-    # for each trace.  Return nothing if there are no files.
-    # Defaults to current directory.
     files = Glob.glob(pat, dir)
     n = size(files, 1)
     if n == 0
         info("SAC.read_wild: No files matching '$pat' in directory '$dir'")
         return SACtr[], String[]
     end
-    A = Array{SACtr}(n)
+    A = Array{SACtr}(undef, n)
     for i = 1:n
         echo && info("SAC.read: '$(files[i])'")
         A[i] = SAC.read(files[i]; terse=!echo)

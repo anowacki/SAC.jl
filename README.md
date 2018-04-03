@@ -17,12 +17,10 @@ Although not registered as an official package, SAC.jl can be added to your
 Julia install like so:
 
 ```julia
-Pkg.add("DSP")
-Pkg.add("Glob")
 Pkg.clone("https://github.com/anowacki/SAC.jl")
 ```
 
-You then need only do
+This will automatically install the depndencies you need.  You then need only do
 
 ```julia
 using SAC
@@ -64,15 +62,38 @@ julia> t[:delta] = 0.02
 
 (Note that SAC floating point headers are `Float32`s.)
 
-The field `t` contains the trace as an `Array{Float32,1}`; manipulate this when
-performing operations on the trace:
+The field `t` contains the trace as an `Array{Float32,1}`.  To change the trace,
+just alter the `:t` index:
 
 ```julia
-julia> t.t += 1 # Add 1 to all points, like SAC's "add" command
+julia> t[:depmax]
+1.52064f0
+
+julia> t[:t] += 1;
+
+julia> t.t
 1000-element Array{Float32,1}:
  0.90272
+ 0.90272
+ 0.90144
  ⋮      
+ 0.92832
  0.9232 
+ 0.9232 
+
+julia> t[:depmax]
+2.52064f0
+```
+
+You can use the methods `+`, `-`, `*` and `/` to modify the traces without
+needing to access `:t` directly, too:
+
+```julia
+julia> t == SAC.sample() + 1
+true
+
+julia> t == 1*t
+true
 ```
 
 You can also get or modify several header values at once:
@@ -194,16 +215,6 @@ To see the list of commands, check the code, or in the REPL type `SAC.` then
 press tab a couple of times to see all the module methods and variables.
 Calling up the interactive help will give a useful description of each.
 
-
-## Dependencies
-- [Glob.jl](https://github.com/vtjnash/Glob.jl)
-- [DSP.jl](https://github.com/JuliaDSP/DSP.jl)
-
-Install these using by doing
-```julia
-Pkg.add("Glob")
-Pkg.add("DSP")
-```
 
 ## Other software
 
