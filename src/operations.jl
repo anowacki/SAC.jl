@@ -438,7 +438,7 @@ end
 Remove the mean in-place for a SAC trace.
 """
 function rmean!(s::SACtr)
-    s.t = s.t .- mean(s.t)
+    s.t .= s.t .- mean(s.t)
     update_headers!(s)
 end
 function rmean!(a::AbstractArray{SACtr})
@@ -572,7 +572,7 @@ Remove the trend from a SAC trace in place.
 function rtrend!(s::SACtr)
     t = time(s)
     x0, x1 = linreg(t, s.t)
-    s.t = s.t - (x0 + x1*t)
+    s.t .= s.t .- (x0 .+ x1.*t)
     update_headers!(s)
 end
 function rtrend!(a::AbstractArray{SACtr})
