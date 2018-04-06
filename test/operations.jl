@@ -85,7 +85,7 @@ end
 
     # Array of traces and constant
     let a = sample(:array), vals = rand(SAC.SACFloat, length(a))
-        N = length(a)
+        local N = length(a)
         # Array with constant
         val = vals[1]
         @test typeof(a .+ val) == Array{SACtr,1}

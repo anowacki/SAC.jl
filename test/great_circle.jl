@@ -3,11 +3,10 @@ using Compat.Test
 using SAC
 
 @testset "Great circles" begin
-    @test begin
-        s = SACtr(1, 2)
+    let s = SACtr(1, 2)
         s[:evlo], s[:evla], s[:stlo], s[:stla] = 0, 0, 12, 15
-        s[:gcarc] ≈ 19.047431084635505 &&
-            s[:az] ≈ 37.992268575139384 &&
-            s[:baz] ≈ 219.57789440455088
+        @test s[:gcarc] ≈ 19.047431084635505
+        @test s[:az] ≈ 37.992268575139384
+        @test s[:baz] ≈ 219.57789440455088
     end
 end

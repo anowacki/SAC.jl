@@ -5,8 +5,8 @@ using SAC
 @testset "Construction" begin
     # Construction from array
     let npts = 1000, delta = 1, b = -5
-        t = rand(SAC.SACFloat, npts)
-        s = SACtr(t, delta)
+        local t = rand(SAC.SACFloat, npts)
+        local s = SACtr(t, delta)
         @test s.t == t
         @test s.delta == delta
         @test s.npts == npts
@@ -43,7 +43,7 @@ using SAC
         @test s[:depmin] ≈ 2
         @test s[:depmax] ≈ 101
         @test s[:depmen] ≈ mean(2:101)
-        k = 1
+        local k = 1
         s[:t] = k
         @test s[:depmin] ≈ k
         @test s[:depmax] ≈ k
@@ -55,7 +55,7 @@ using SAC
 
     # Arrays of traces
     let N = 5, b = -10, delta = 2, npts = 100
-        a = [SACtr(delta, npts, b) for _ in 1:N]
+        local a = [SACtr(delta, npts, b) for _ in 1:N]
         @test all(a[:b] .≈ b)
         @test all(a[:delta] .≈ delta)
         @test all(a[:npts] .== npts)
@@ -63,7 +63,7 @@ using SAC
         @test all(a[:a] .== SAC.SACFloat.(1:N))
         a[:t] = [1:npts for _ in 1:N]
         @test all(a[:t] .== [SAC.SACFloat.(1:npts) for _ in 1:N])
-        k = -1
+        local k = -1
         a[:t] = k
         @test all(a[:t] .== [[SAC.SACFloat(k) for j in 1:npts] for i in 1:N])
         a[:kcmpnm] = "ABC"
