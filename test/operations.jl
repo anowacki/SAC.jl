@@ -130,10 +130,10 @@ end
         rmean!(s)
         @test s[:depmen] ≈ 0.0
     end
-    let s = SACtr([i for i in 1:100], 0.1)
-        @test all(isapprox.(rtrend(s)[:t], 0.0, atol=1e5))
+    let s = SACtr(1:100, 0.1)
+        @test all(isapprox.(rtrend(s)[:t], 0.0, atol=1e-4))
         rtrend!(s)
-        @test all(isapprox.(s[:t], 0.0, atol=1e-5))
+        @test all(isapprox.(s[:t], 0.0, atol=1e-4))
     end
     # Arrays
     let a = [SAC.sample() for _ in 1:5], s = SAC.sample()
