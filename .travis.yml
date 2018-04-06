@@ -4,9 +4,13 @@ os:
   - linux
 julia:
   - 0.6
-  - release
+  - nightly
 notifications:
   email: false
+
+matrix:
+  allow_failures:
+  - julia: nightly
 
 # Required for Dierckx
 addons:
