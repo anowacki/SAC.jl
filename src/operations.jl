@@ -135,6 +135,24 @@ julia> modify(s, x->x^2)[:depmax]
 """
 modify(s::SACtr, f) = modify!(deepcopy(s), f)
 
+"""
+    normalise!(s::SACtr) -> s
+
+Normalise a SACtr `s` so that its maximum absolute amplitude is unity.
+"""
+function normalise!(s::SACtr)
+    maxval = maximum(abs, s.t)
+    s.t .= s.t./maxval
+    update_headers!(s)
+end
+
+"""
+    normalise(s::SACtr) -> s_new
+
+Return a copy of `s` where the maximum absolute amplitude is unity.
+"""
+normalise(s::SACtr) = normalise!(deepcopy(s))
+
 # Linear operations on multiple traces
 check_traces_combine(s1, s2) = begin s1.b ≈ s2.b && s1.npts == s2.npts ||
     throw(ArgumentError("Traces must have same strart time and length")) end

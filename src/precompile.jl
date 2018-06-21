@@ -54,6 +54,7 @@ function _precompile()
         precompile(divide!, (Array{SACtr}, f1))
         precompile(multiply!, (SACtr, f1))
         precompile(multiply!, (Array{SACtr}, f1))
+        precompile(normalise!, (SACtr,))
         for f2 in number_types
             precompile(cut!, (SACtr, f1, f2))
             precompile(cut!, (Array{SACtr}, f1, f2))

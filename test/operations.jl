@@ -148,4 +148,10 @@ end
         rtrend!(s)
         @test all(s .== s)
     end
+
+    ## Normalisation
+    let s = SACtr(rand(SAC.SACFloat, 100), 0.1), s′ = deepcopy(s)
+        @test all(normalise(s).t .== s′.t./maximum(abs, s.t))
+        @test normalise!(s) == normalise(s′)
+    end
 end

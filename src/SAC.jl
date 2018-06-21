@@ -10,6 +10,10 @@ module SAC
 using Compat
 using Compat.LinearAlgebra
 
+@static if VERSION >= v"0.7-"
+    import StatsBase: linreg
+end
+
 import DSP, Dierckx
 import Glob
 import Base: ==, copy, getindex, fft, setindex!, time, write
@@ -37,6 +41,8 @@ export
     modify,
     multiply!,
     multiply,
+    normalise!,
+    normalise,
     read_wild,
     rmean!,
     rotate_through!,
@@ -114,6 +120,14 @@ for (name, abbrev) in copying_funcs
 end
 
 # Build methods which can be used with chaining (`|>`)
+"""Dict with keys given by name of each function to have a chaining version.
+   Where an abbreviated version exists, that is given as the value; otherwise
+   the value is nothing."""
+const chaining_funcs = Dict(
+    copying_funcs...,
+    :normalise! => nothing
+    )
+
 for (name, abbrev) in copying_funcs
     new_name = Symbol(string(name)[1:end-1])
     @eval begin
