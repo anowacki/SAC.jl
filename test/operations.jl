@@ -110,6 +110,12 @@ end
 
     # Multiple trace versions
     let s1 = SAC.sample(), s2 = SAC.sample() + 1
+        @test_throws ArgumentError SAC.check_traces_combine(s1, cut(s1, :a, 1, :e, -1))
+        s1′ = deepcopy(s1)
+        s1′.delta = 2s1.delta
+        @test_throws ArgumentError SAC.check_traces_combine(s1, s1′)
+        @test SAC.check_traces_combine(s1, s1)
+        @test SAC.check_traces_combine(s1, s2)
         @test typeof(s1 + s2) == SACtr
         @test all((s1 + s2).t .== s1.t .+ s2.t)
         @test all((s1 - s2).t .== s1.t .- s2.t)

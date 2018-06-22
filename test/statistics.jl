@@ -27,7 +27,7 @@ using SAC
         # Step function from 1 to 2 one sample after 0 time
         let delta = 1.0, npts = 101, b = -50.0, t1 = 2, t2 = 4
             local s = SACtr(ones(npts), delta, b)
-            s.t[52:end] = 2
+            s.t[52:end] .= 2
             @test stalta(s, delta, 10, 10) ≈ 2.0
             @test stalta(s, -delta, 2delta, 0.5, 0.5) ≈ [1, 1, 2, 2]
             @test typeof(stalta(s, 0.1, 1)) == SACtr

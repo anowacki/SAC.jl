@@ -154,8 +154,8 @@ Return a copy of `s` where the maximum absolute amplitude is unity.
 normalise(s::SACtr) = normalise!(deepcopy(s))
 
 # Linear operations on multiple traces
-check_traces_combine(s1, s2) = begin s1.b ≈ s2.b && s1.npts == s2.npts ||
-    throw(ArgumentError("Traces must have same strart time and length")) end
+check_traces_combine(s1, s2) = begin s1.b ≈ s2.b && s1.npts == s2.npts && s1.delta ≈ s2.delta ||
+    throw(ArgumentError("Traces must have same strart time, length and sampling interval")) end
 
 """
     add(s1::SACtr, s2::SACtr) -> total::SACtr
