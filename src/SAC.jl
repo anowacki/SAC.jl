@@ -95,7 +95,6 @@ const copying_funcs = Dict(
     )
 for (name, abbrev) in copying_funcs
     new_name = Symbol(string(name)[1:end-1])
-    new_abbrev = Symbol(string(abbrev)[1:end-1])
     @eval begin
         function ($new_name)(s::Union{SACtr,AbstractArray{SACtr}}, args...; kwargs...)
             s_new = deepcopy(s)
@@ -112,6 +111,7 @@ for (name, abbrev) in copying_funcs
         export $new_name
     end
     if abbrev != nothing
+        new_abbrev = Symbol(string(abbrev)[1:end-1])
         @eval begin
             const $new_abbrev = $new_name
             export $new_abbrev
