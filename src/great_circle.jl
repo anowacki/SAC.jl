@@ -93,7 +93,7 @@ function vincentypt(f::T, a::T, phi1::T, lembda1::T, alpha12::T, s::T) where {T<
 
     TanU1 = (1 - f) .* tan(phi1)
     U1 = atan( TanU1 )
-    sigma1 = atan2( TanU1, cos(alpha12) )
+    sigma1 = atan( TanU1, cos(alpha12) )
     Sinalpha = cos(U1) .* sin(alpha12)
     cosalpha_sq = 1.0 - Sinalpha .* Sinalpha
 
@@ -121,9 +121,9 @@ function vincentypt(f::T, a::T, phi1::T, lembda1::T, alpha12::T, s::T) where {T<
         sigma = (s ./ (b .* A)) + delta_sigma
     end
 
-    phi2 = atan2( (sin(U1) .* cos(sigma) + cos(U1) .* sin(sigma) .* cos(alpha12) ), ((1-f) .* sqrt( Sinalpha.^2 + (sin(U1) .* sin(sigma) - cos(U1) .* cos(sigma) .* cos(alpha12)).^2)))
+    phi2 = atan( (sin(U1) .* cos(sigma) + cos(U1) .* sin(sigma) .* cos(alpha12) ), ((1-f) .* sqrt( Sinalpha.^2 + (sin(U1) .* sin(sigma) - cos(U1) .* cos(sigma) .* cos(alpha12)).^2)))
 
-    lembda = atan2( (sin(sigma) .* sin(alpha12 )), (cos(U1) .* cos(sigma) - sin(U1) .* sin(sigma) .* cos(alpha12)))
+    lembda = atan( (sin(sigma) .* sin(alpha12 )), (cos(U1) .* cos(sigma) - sin(U1) .* sin(sigma) .* cos(alpha12)))
 
     C = (f./16) .* cosalpha_sq .* (4 + f .* (4 - 3 .* cosalpha_sq ))
 
@@ -131,7 +131,7 @@ function vincentypt(f::T, a::T, phi1::T, lembda1::T, alpha12::T, s::T) where {T<
 
     lembda2 = lembda1 + omega
 
-    alpha21 = atan2( Sinalpha, (-sin(U1) .* sin(sigma) + cos(U1) .* cos(sigma) .* cos(alpha12)))
+    alpha21 = atan( Sinalpha, (-sin(U1) .* sin(sigma) + cos(U1) .* cos(sigma) .* cos(alpha12)))
     alpha21 = alpha21 + pi
 
     if alpha21 < 0.0
@@ -196,7 +196,7 @@ function vincentydist(f::T, a::T, phi1::T, lembda1::T, phi2::T, lembda2::T) wher
         sqr_sin_sigma = (cos(U2) .* sin(lembda)).^2 + ( (cos(U1) .* sin(U2) - sin(U1) .* cos(U2) .* cos(lembda) )).^2
         Sin_sigma = sqrt( sqr_sin_sigma )
         Cos_sigma = sin(U1) .* sin(U2) + cos(U1) .* cos(U2) .* cos(lembda)
-        sigma = atan2( Sin_sigma, Cos_sigma )
+        sigma = atan( Sin_sigma, Cos_sigma )
 
         Sin_alpha = cos(U1) .* cos(U2) .* sin(lembda) ./ sin(sigma)
 
@@ -223,8 +223,8 @@ function vincentydist(f::T, a::T, phi1::T, lembda1::T, phi2::T, lembda2::T) wher
 
     s = b .* A .* (sigma - delta_sigma)
 
-    alpha12 = atan2( (cos(U2) .* sin(lembda)), (cos(U1) .* sin(U2) - sin(U1) .* cos(U2) .* cos(lembda)))
-    alpha21 = atan2( (cos(U1) .* sin(lembda)), (-sin(U1) .* cos(U2) + cos(U1) .* sin(U2) .* cos(lembda)))
+    alpha12 = atan( (cos(U2) .* sin(lembda)), (cos(U1) .* sin(U2) - sin(U1) .* cos(U2) .* cos(lembda)))
+    alpha21 = atan( (cos(U1) .* sin(lembda)), (-sin(U1) .* cos(U2) + cos(U1) .* sin(U2) .* cos(lembda)))
 
     if alpha12 < 0.0
         alpha12 = alpha12 + two_pi

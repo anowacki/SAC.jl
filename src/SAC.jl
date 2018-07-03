@@ -16,7 +16,10 @@ end
 
 import DSP, Dierckx
 import Glob
-import Base: ==, copy, getindex, fft, setindex!, time, write
+import Base: ==, copy, getindex, setindex!, time, write
+@static if VERSION < v"0.7-"
+    import Base: fft
+end
 
 export
     SACtr,
