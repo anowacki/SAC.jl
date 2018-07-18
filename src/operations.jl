@@ -235,12 +235,12 @@ the same length as `s`.
 """
 function cut!(s::SACtr, b::Real, e::Real)
     if b < s.b
-        info("SAC.cut!: beginning cut is before start of trace.  Setting to $(s.b).")
+        @info("SAC.cut!: beginning cut is before start of trace.  Setting to $(s.b).")
         b = s.b
     end
     b > s.e && error("SAC.cut!: end cut time is later than end of trace.")
     if e > s.e
-        info("SAC.cut!: end cut is after end of trace.  Setting to $(s.e).")
+        @info("SAC.cut!: end cut is after end of trace.  Setting to $(s.e).")
         e = s.e
     end
     e < s.b && error("SAC.cut!: end time is earlier than start of trace.")
@@ -660,7 +660,7 @@ trace with zeroes.
 function tshift!(s::SACtr, tshift::Number, wrap=true)
     n = round(Int, tshift/s.delta)
     if n == 0
-        sac_verbose && info("SAC.tshift!: t ($tshift) is less than delta ($(s.delta)) so no shift applied")
+        sac_verbose && @info("SAC.tshift!: t ($tshift) is less than delta ($(s.delta)) so no shift applied")
         return
     end
     s.t = circshift(s.t, n)

@@ -9,9 +9,11 @@ module SAC
 
 using Compat
 using Compat.LinearAlgebra
+import Compat: @info
 
 @static if VERSION >= v"0.7-"
     import StatsBase: linreg
+    import Statistics: mean
 end
 
 import DSP, Dierckx

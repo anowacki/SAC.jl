@@ -1,6 +1,9 @@
 # Test the creation of SACtr's
 using Compat.Test
 using SAC
+@static if VERSION >= v"0.7-"
+    import Statistics: mean
+end
 
 @testset "Construction" begin
     # Construction from array

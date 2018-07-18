@@ -75,7 +75,7 @@ parts of files are read without error.
         error("Data are little-endian but `swap` is `false`.  Not attempting to swap bytes" *
             (file!="" ? " for file '$file'." : "."))
     native && machine_is_little_endian && !terse &&
-        info("Data are little-endian; byteswapping")
+        @info("Data are little-endian; byteswapping")
     byteswap(x) = native ? x : bswap(x)
 
     ## Read header
