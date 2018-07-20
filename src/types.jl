@@ -210,3 +210,7 @@ function copy(s::SACtr)
         s.kt8, s.kt9, s.kf, s.kuser0, s.kuser1, s.kuser2, s.kcmpnm, s.knetwk, s.kdatrd, s.kinst,
         Base.copy(s.t))
 end
+
+@static if VERSION >= v"0.7-"
+    Base.broadcastable(x::SACtr) = Ref(x)
+end
