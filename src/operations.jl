@@ -358,17 +358,11 @@ envelope!(s::SACtr) = envelope!([s])
 Return the Fourier-transformed trace from `s` as `S`, with the frequencies
 which correspond to each point in `f`.
 """
-function fft(s::SACtr)
-    N = round(Int, s.npts/2) + 1
-    fmax = 1.0/(s.npts*s.delta)
-    f = collect(1:N)*fmax
-    S = Base.fft(s.t)[1:N]
-    return f, S
-end
+fft(s::SACtr) = DSP.rfftfreq(length(s.t), 1/s[:delta]), rfft(s.t)
 
 function fft(a::AbstractArray{SACtr})
     n = length(a)
-    f, S = Array{Array}(n), Array{Array}(n)
+    f, S = Array{Array{SACFloat}}(undef, n), Array{Array{Complex{SACFloat}}}(undef, n)
     for i = 1:n
         f[i], S[i] = fft(a[i])
     end
