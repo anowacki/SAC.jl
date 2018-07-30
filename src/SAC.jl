@@ -37,6 +37,7 @@ export
     divide,
     envelope!,
     fft,
+    flip_component!,
     highpass!,
     hp!,
     integrate!,
