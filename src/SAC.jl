@@ -21,7 +21,10 @@ end
 import DSP, Dierckx
 import Glob
 import Base: ==, copy, getindex, setindex!, time, write
-@static if VERSION < v"0.7-"
+@static if VERSION >= v"0.7-"
+    import AbstractFFTs: fft
+    import FFTW: rfft
+else
     import Base: fft
 end
 

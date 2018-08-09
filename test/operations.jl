@@ -1,6 +1,9 @@
 # Test linear operations on SAC traces
 using Compat.Test
 using SAC
+if VERSION >= v"0.7-"
+    import FFTW: rfft, irfft
+end
 
 function inplace_compare(s, f, f!, val)
     s = deepcopy(s)
