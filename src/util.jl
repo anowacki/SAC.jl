@@ -28,6 +28,21 @@ function flip_component!(s::SACtr)
 end
 
 """
+    linear_regression(x, y)
+
+Perform simple linear regression using Ordinary Least Squares. Returns `a` and `b` such
+that `a + b*x` is the closest straight line to the given points `(x, y)`, i.e., such that
+the squared error between `y` and `a + b*x` is minimized.
+"""
+function linear_regression(x::AbstractVector, y::AbstractVector)
+    size(x) == size(y) || throw(DimensionMismatch("x and y must be the same size"))
+    mx, my = mean(x), mean(y)
+    b = covm(x, mx, y, my)/varm(x, mx)
+    a = my - b*mx
+    return a, b
+end
+
+"""
     isundefined(x) -> ::Bool
 
 If the SAC value `x` is undefined, return `true`.

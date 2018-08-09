@@ -13,8 +13,9 @@ using Compat.LinearAlgebra
 import Compat: @info
 
 @static if VERSION >= v"0.7-"
-    import StatsBase: linreg
-    import Statistics: mean
+    import Statistics: mean, covm, varm
+else
+    import Base: covm, varm
 end
 
 import DSP, Dierckx

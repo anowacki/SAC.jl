@@ -585,7 +585,7 @@ Remove the trend from a SAC trace in place.
 """
 function rtrend!(s::SACtr)
     t = time(s)
-    x0, x1 = linreg(t, s.t)
+    x0, x1 = linear_regression(t, s.t)
     s.t .= s.t .- (x0 .+ x1.*t)
     update_headers!(s)
 end
