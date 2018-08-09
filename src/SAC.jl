@@ -8,6 +8,7 @@ Sister library SACPlot.jl can be used for plotting.
 module SAC
 
 using Compat
+import Compat.Dates
 using Compat.LinearAlgebra
 import Compat: @info
 
@@ -36,6 +37,7 @@ export
     divide,
     envelope!,
     fft,
+    flip_component!,
     highpass!,
     hp!,
     integrate!,

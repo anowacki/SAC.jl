@@ -22,7 +22,7 @@ Flip a component so that it points in the opposite direction.
 """
 function flip_component!(s::SACtr)
     s[:cmpaz] = mod(s[:cmpaz] + 180, 360)
-    s[:cmpinc] *= -1
+    s[:cmpinc] = 180 - s[:cmpinc]
     s[:kcmpnm] = sacstring(round(s[:cmpaz], 2))
     multiply!(s, -1)
 end

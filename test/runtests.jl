@@ -10,4 +10,5 @@ using Compat.Test
     include("great_circle.jl")
     include("rotate_to_gcp.jl")
     include("statistics.jl")
+    include("util.jl")
 end

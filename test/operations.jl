@@ -160,4 +160,19 @@ end
         @test all(normalise(s).t .== s′.t./maximum(abs, s.t))
         @test normalise!(s) == normalise(s′)
     end
+
+    ## FFT
+    let s = SACtr(rand(SAC.SACFloat, 10000), 0.01)
+        f, S = fft(s)
+        @test s.t ≈ irfft(S, s[:npts])
+        @test length(f) == length(S) == s[:npts]÷2 + 1
+        @test minimum(f) == zero(typeof(f[1]))
+        @test maximum(f) ≈ 1/s[:delta]/2
+        # Array version
+        ss = [s for _ in 1:3]
+        f, S = fft(ss)
+        @test length(f) == length(S) == length(ss)
+        @test all((f[1],) .== f)
+        @test all((S[1],) .== S)
+    end
 end
