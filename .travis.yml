@@ -4,19 +4,21 @@ os:
   - linux
 julia:
   - 0.6
+  - 0.7
+  - 1
   - nightly
 notifications:
   email: false
 
 matrix:
   allow_failures:
-  - julia: nightly
+    - julia: nightly
 
 # Required for Dierckx
 addons:
   apt:
     packages:
-    - gfortran
+      - gfortran
 
 before_install:
     - if [ "$TRAVIS_OS_NAME" == "osx" ]; then
@@ -24,8 +26,5 @@ before_install:
             brew install gcc;
       fi
 
-script:
-  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-  - julia --check-bounds=yes -e 'Pkg.clone(pwd()); Pkg.build("SAC"); Pkg.test("SAC"; coverage=true)'
 after_success:
-  - julia -e 'cd(Pkg.dir("SAC")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'VERSION >= v"0.7" && import Pkg; cd(Pkg.dir("SAC")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
