@@ -58,7 +58,7 @@ parts of files are read without error.
 """ SACtr
 
 
-@eval function SACtr(data::Vector{UInt8}, file=""; swap::Bool=true, terse::Bool=false,
+function SACtr(data::Vector{UInt8}, file=""; swap::Bool=true, terse::Bool=false,
         check_npts::Bool=true)
     len = sac_byte_len
     clen = 2*sac_byte_len
@@ -77,36 +77,50 @@ parts of files are read without error.
     native && machine_is_little_endian && !terse &&
         @info("Data are little-endian; byteswapping")
     byteswap(x) = native ? x : bswap(x)
+    # Create an empty object
+    npts_in_file = (length(data) - sac_header_len)÷len
+    trace = SACtr(1, npts_in_file)
 
     ## Read header
     # Float part
-    $([:($s = byteswap(reinterpret(SACFloat, data[(($i-1)*len)+1:$i*len])[1])) for (s, i) in zip(sac_float_hdr, 1:length(sac_float_hdr))]...)
-    off = length(sac_float_hdr)*len
+    off = 0
+    for (i, field) in enumerate(sac_float_hdr)
+        setfield!(trace, field,
+            byteswap(reinterpret(SACFloat, data[off+1:off+len])[1]))
+        off += len
+    end
     # Int part
-    $([:($s = byteswap(reinterpret(SACInt, data[(($i-1)*len)+1+off:$i*len+off])[1])) for (s, i) in zip(sac_int_hdr, 1:length(sac_int_hdr))]...)
-    off += length(sac_int_hdr)*len
+    for (i, field) in enumerate(sac_int_hdr)
+        setfield!(trace, field,
+            byteswap(reinterpret(SACInt, data[off+1:off+len])[1]))
+        off += len
+    end
     # Boolean part
-    $([:($s = 0 != byteswap(reinterpret(SACInt, data[(($i-1)*len)+1+off:$i*len+off])[1])) for (s, i) in zip(sac_bool_hdr, 1:length(sac_bool_hdr))]...)
-    off += length(sac_bool_hdr)*len
+    for (i, field) in enumerate(sac_bool_hdr)
+        setfield!(trace, field,
+            1 == byteswap(reinterpret(SACInt, data[off+1:off+len])[1]))
+        off += len
+    end
     # Character part
-    # kevnm header is double length, so split into two then recombine
-    char_sym_list = [sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]]
-    $([:($s = strip(String(data[(($i-1)*clen)+1+off:$i*clen+off]))) for (s, i) in zip([sac_char_hdr[1]; :kevnm1; :kevnm2; sac_char_hdr[3:end]], 1:length(sac_char_hdr)+1)]...)
-    kevnm = (kevnm1 == sac_cnull) ? sac_cnull : strip(rpad(kevnm1, clen) * kevnm2)
-    off += (length(sac_char_hdr) + 1)*clen
+    # kevnm header is double length, so treat separately
+    trace.kstnm = String(strip(String(data[off+1:off+clen])))
+    off += clen
+    trace.kevnm = String(strip(String(data[off+1:off+2clen])))
+    off += 2clen
+    for (i, field) in enumerate(sac_char_hdr)
+        i <= 2 && continue
+        setfield!(trace, field,
+            String(strip(String(data[1+off:clen+off]))))
+        off += clen
+    end
 
     # Check length
     @assert off == sac_header_len
-    npts_in_file = (length(data) - sac_header_len)÷len
-    check_npts && npts_in_file < npts &&
+    check_npts && npts_in_file < trace.npts &&
         error("Number of points is not as expected: have $npts_in_file versus npts = " *
             "$npts in header" * (file!="" ? " for file '$file'." : "."))
 
-    # Create an empty object...
-    trace = SACtr(delta, npts_in_file)
-    # ...and fill the headers...
-    $([:(trace.$s = $s) for s in sac_all_hdr]...)
-    # ...then read in the trace
+    # Now read in the trace
     trace.t .= reinterpret(SACFloat, data[(sac_header_len+1):end])
     native || (trace.t .= bswap.(trace.t))
     update_headers!(trace)
