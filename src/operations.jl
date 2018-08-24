@@ -346,7 +346,7 @@ Find the envelope of a SAC trace
 """
 function envelope!(a::AbstractArray{SACtr})
     for s in a
-        s.t = abs(DSP.hilbert(s.t))
+        s.t = abs.(DSP.hilbert(s.t))
     end
     update_headers!(a)
 end
