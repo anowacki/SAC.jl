@@ -16,6 +16,16 @@ either the [SAC/BRIS](http://www1.gly.bris.ac.uk/~george/sac-bugs.html) or
 Although not registered as an official package, SAC.jl can be added to your
 Julia install like so:
 
+On Julia v0.7 or v1.0 (press `]` to get to `pkg` mode first):
+
+```julia
+(v1.0) pkg> add https://github.com/anowacki/SAC.jl
+```
+
+(Or you can also do `import Pkg; Pkg.add("https://github.com/anowacki/SAC.jl")`.)
+
+On Julia v0.6:
+
 ```julia
 Pkg.clone("https://github.com/anowacki/SAC.jl")
 ```
