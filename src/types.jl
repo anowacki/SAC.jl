@@ -106,6 +106,7 @@ function SACtr(data::Vector{UInt8}, file=""; swap::Bool=true, terse::Bool=false,
     trace.kstnm = String(strip(String(data[off+1:off+clen])))
     off += clen
     trace.kevnm = String(strip(String(data[off+1:off+2clen])))
+    trace.kevnm == strip(rpad(sac_cnull, clen)^2) && (trace.kevnm = sac_cnull)
     off += 2clen
     for (i, field) in enumerate(sac_char_hdr)
         i <= 2 && continue
