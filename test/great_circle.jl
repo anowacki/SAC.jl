@@ -1,5 +1,5 @@
 # Test the grat circle calculation functions
-using Compat.Test
+using Test
 using SAC
 
 @testset "Great circles" begin

@@ -1,6 +1,5 @@
 # Test statistical measures of traces
-import Compat: argmax
-using Compat.Test
+using Test
 using SAC
 
 @testset "Statistics" begin

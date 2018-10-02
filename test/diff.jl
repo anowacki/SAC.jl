@@ -1,5 +1,5 @@
 # Test the differentiate function
-using Compat.Test
+using Test
 using SAC
 
 @testset "Differentiation" begin

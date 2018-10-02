@@ -1,5 +1,5 @@
 # Test rotation to great circle path
-using Compat.Test
+using Test
 using SAC
 
 @testset "Great circle path rotation" begin

@@ -1,4 +1,4 @@
-using Compat.Test
+using Test
 
 @testset "SAC tests" begin
     include("construction.jl")

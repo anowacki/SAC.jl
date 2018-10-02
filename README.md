@@ -24,7 +24,7 @@ On Julia v0.7 or v1.0 (press `]` to get to `pkg` mode first):
 
 (Or you can also do `import Pkg; Pkg.add("https://github.com/anowacki/SAC.jl")`.)
 
-On Julia v0.6:
+On Julia v0.6, versions before 0.3 can be installed like so:
 
 ```julia
 Pkg.clone("https://github.com/anowacki/SAC.jl")

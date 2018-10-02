@@ -488,9 +488,7 @@ function rotate_through!(s1::SACtr, s2::SACtr, phi)
     end
     for t in (s1, s2)
         setfield!(t, :cmpaz, SAC.SACFloat(mod(getfield(t, :cmpaz) + phi, 360.)))
-        # TODO: Workaround for https://github.com/JuliaLang/Compat.jl/issues/567
-        # Update when https://github.com/JuliaLang/Compat.jl/pull/537 is merged
-        setfield!(t, :kcmpnm, SAC.sacstring(Compat.round(getfield(t, :cmpaz), digits=2, base=10)))
+        setfield!(t, :kcmpnm, SAC.sacstring(round(getfield(t, :cmpaz), digits=2, base=10)))
         update_headers!(t)
     end
     s1, s2

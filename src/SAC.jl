@@ -1,5 +1,3 @@
-__precompile__()
-
 """
 SAC.jl provides routines for dealing with SAC-formatted time series files,
 including reading, writing, filtering, mean removal, rotating, and so on.
@@ -7,26 +5,14 @@ Sister library SACPlot.jl can be used for plotting.
 """
 module SAC
 
-using Compat
-import Compat.Dates
-using Compat.LinearAlgebra
-import Compat: @info
-
-@static if VERSION >= v"0.7-"
-    import Statistics: mean, covm, varm
-else
-    import Base: covm, varm
-end
-
+import Dates
+using LinearAlgebra
+import Statistics: mean, covm, varm
 import DSP, Dierckx
 import Glob
 import Base: ==, copy, getindex, setindex!, time, write
-@static if VERSION >= v"0.7-"
-    import AbstractFFTs: fft
-    import FFTW: rfft
-else
-    import Base: fft
-end
+import AbstractFFTs: fft
+import FFTW: rfft
 
 export
     SACtr,

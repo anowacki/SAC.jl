@@ -1,5 +1,5 @@
 # Test reading and writing of SAC files
-using Compat.Test
+using Test
 using SAC
 
 @testset "IO" begin

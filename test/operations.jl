@@ -1,5 +1,5 @@
 # Test linear operations on SAC traces
-using Compat.Test
+using Test
 using SAC
 if VERSION >= v"0.7-"
     import FFTW: rfft, irfft

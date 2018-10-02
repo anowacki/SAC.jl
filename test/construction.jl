@@ -1,5 +1,5 @@
 # Test the creation of SACtr's
-using Compat.Test
+using Test
 using SAC
 @static if VERSION >= v"0.7-"
     import Statistics: mean

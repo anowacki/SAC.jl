@@ -3,7 +3,6 @@ os:
   - osx
   - linux
 julia:
-  - 0.6
   - 0.7
   - 1.0
   - nightly
@@ -27,4 +26,4 @@ before_install:
       fi
 
 after_success:
-  - julia -e 'VERSION >= v"0.7" && import Pkg; cd(Pkg.dir("SAC")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'
+  - julia -e 'import Pkg; cd(Pkg.dir("SAC")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(Coveralls.process_folder())'

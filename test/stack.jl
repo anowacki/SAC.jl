@@ -1,6 +1,5 @@
 # Test stacking of SAC traces
-using Compat
-using Compat.Test
+using Test
 using SAC
 
 normal_dist(x, μ, σ) = exp(-(x - μ)/2σ^2)/sqrt(2σ^2*π)

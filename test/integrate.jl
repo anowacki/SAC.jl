@@ -1,5 +1,5 @@
 # Test the integrate function
-using Compat.Test
+using Test
 using SAC
 
 @testset "Integration" begin
