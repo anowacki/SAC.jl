@@ -58,5 +58,15 @@ using SAC
         for t1 in list_of_transverses, t2 in list_of_transverses
             @test t1 == t2
         end
+
+        # #5: Test returned traces are the same as those modified in-place
+        s1, s2 = deepcopy(s)
+        r, t = rotate_to_gcp!(s1, s2)
+        @test s1 === r
+        @test s2 === t
+        s1, s2 = deepcopy(s)
+        r, t = rotate_to_gcp!(s2, s1)
+        @test s2 === r
+        @test s1 === t
     end
 end

@@ -541,7 +541,7 @@ If `reverse` is true, then s2 is rotated to be 90° anticlockwise, so that the
 polarity is reversed.
 
 The component names of the radial and transverse traces are updated to be
-'R', and either 'T' or '-T' respectively for normal and reverse polarity.
+'Radial', and either 'Trans' or '-Trans' respectively for normal and reverse polarity.
 
     rotate_to_gcp!(a::AbstractArray{SACtr}, reverse=false) -> a
 
@@ -550,7 +550,7 @@ as the two horizontal components
 """
 function rotate_to_gcp!(s1::SACtr, s2::SACtr, reverse::Bool=false)
     s2_is_clockwise_of_s1 = angle_difference(s1[:cmpaz], s2[:cmpaz]) > 0
-    s2_is_clockwise_of_s1 || ((s1, s2) = (s2, s1))
+    s2_is_clockwise_of_s1 || swap_traces!(s1, s2)
     !isundefined(s1[:baz]) && !isundefined(s2[:baz]) ||
         throw(ArgumentError("Backazimuth is not defined for both traces"))
     s1[:baz] ≈ s2[:baz] || throw(ArgumentError("Backazimuth not the same for both traces"))
