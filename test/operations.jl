@@ -186,4 +186,13 @@ end
         interpolate!(s, n=4)
         @test interpolate(s′, n=4) == s
     end
+
+    ## Time shift
+    let s = SACtr([0,1,2], 1), s′ = deepcopy(s)
+        @test tshift(s, 1, false).t == [0, 0, 1]
+        @test tshift(s, -1, false).t == [1, 2, 0]
+        @test tshift(s, 1).t == [2, 0, 1]
+        tshift!(s, 3)
+        @test s == tshift(s′, 3)
+    end
 end

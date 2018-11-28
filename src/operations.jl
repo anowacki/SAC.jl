@@ -642,23 +642,26 @@ taper!(S::AbstractArray{SACtr}, width=0.05, form::Symbol=:hamming) =
     (for s in S taper!(s, width, form) end; S)
 
 """
-    tshift!(::SACtr, tshift, wrap=true)
+    tshift!(::SACtr, tshift, wrap=true; verbose=true)
 
-Shift a SAC trace backward in time by `t` seconds.
+Shift a SAC trace backward in time by `t` seconds in the time domain.
 
 If `wrap` true (default), then points which move out the back of the trace
 are added to the front (and vice versa).  Setting it to false instead pads the
 trace with zeroes.
+
+If `verbose` is `true` (default), then report when time shifts are so small
+that no shift is applied.
 """
-function tshift!(s::SACtr, tshift::Number, wrap=true)
+function tshift!(s::SACtr, tshift::Number, wrap=true; verbose=true)
     n = round(Int, tshift/s.delta)
     if n == 0
-        sac_verbose && @info("SAC.tshift!: t ($tshift) is less than delta ($(s.delta)) so no shift applied")
-        return
+        verbose && @info("SAC.tshift!: t ($tshift) is less than delta ($(s.delta)) so no shift applied")
+        return s
     end
     s.t = circshift(s.t, n)
     if !wrap
-        n > 0 ? s.t[1:n] = 0. : s.t[end+n+1:end] = 0.
+        n > 0 ? s.t[1:n] .= 0.f0 : s.t[end+n+1:end] .= 0.f0
     end
     update_headers!(s)
 end
