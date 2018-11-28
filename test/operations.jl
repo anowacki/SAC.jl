@@ -178,4 +178,12 @@ end
         @test all((f[1],) .== f)
         @test all((S[1],) .== S)
     end
+
+    ## Interpolation
+    let s = SACtr([0,1,2,3], 1), s′ = deepcopy(s)
+        @test interpolate(s, delta=0.5) == interpolate(s, npts=7) == interpolate(s, n=2)
+        @test interpolate(s, n=2).t ≈ range(0, stop=3, length=7)
+        interpolate!(s, n=4)
+        @test interpolate(s′, n=4) == s
+    end
 end

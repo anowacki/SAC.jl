@@ -415,34 +415,33 @@ Resample a SAC trace by supplying one of three things:
 
 Interpolation is performed using quadratic splines using the `Dierckx` package.
 """
-function interpolate!(s::SACtr; npts::Integer=0, delta::Real=0.0, n::Integer=0)
+function interpolate!(s::SACtr; npts=nothing, delta=nothing, n=nothing)
+    # Create interpolation function using degree-2 Bsplines
+    spl = Dierckx.Spline1D(collect(SAC.time(s)), s.t, k=2)
     # Calculate new points at which to evaluate time series
-    interp_t = if npts != 0
+    if npts !== nothing
+        npts = Int(npts)
         npts >= 0 || error("`npts` cannot be negative")
-        delta = (s.e - s.b)/(npts - 1)
-        s.b + (0:(npts-1))*delta
-    elseif delta != 0.0
+        s.delta = (s.e - s.b)/(npts - 1)
+        s.npts = npts
+    elseif delta !== nothing
         delta >= 0.0 || error("`delta` cannot be negative")
-        delta < (s.e - s.b) || error("`delta`")
-        times = s.b:delta:s.e
-        npts = length(times)
-        times
-    elseif n != 0
+        delta < (s.e - s.b) || error("`delta` is greater than trace length")
+        s.delta = delta
+        s.npts = round(Int, (s.e - s.b)/s.delta) + 1
+    elseif n !== nothing
+        n = Int(n)
         n > 0 || error("`n` cannot be negative")
-        npts = (s.npts - 1)*n + 1
-        delta = (s.e - s.b)/(npts - 1)
-        s.b + (0:(npts-1))*delta
+        s.delta /= n
+        s.npts = (s.npts - 1)*n + 1
     else
         error("Must supply one keyword argument of `npts`, `n` or `delta`")
     end
-    @assert npts == length(interp_t)
-    # Create fit using degree-2 Bsplines
-    spl = Dierckx.Spline1D(collect(SAC.time(s)), s.t, k=2)
-    s.t = Dierckx.evaluate(spl, interp_t)
-    s.npts = npts
-    s.delta = delta
+    @assert length(time(s)) == s.npts
+    s.t = Dierckx.evaluate(spl, time(s))
     update_headers!(s)
 end
+interpolate!(s::AbstractArray{SACtr}; kwargs...) = interpolate!.(s; kwargs...)
 
 """
     rmean!(::SACtr)
