@@ -105,9 +105,13 @@ Swap the contents of two traces, `s1` and `s2`, by an in-place transposition of 
 header and trace values.
 """
 function swap_traces!(s1::SACtr, s2::SACtr)
-    for f in fieldnames(s1)
+    for f in fieldnames(SACtr)
+        f === :t && continue
         s1[f], s2[f] = s2[f], s1[f]
     end
+    t1 = copy(s1.t)
+    t2 = copy(s2.t)
+    s1.t, s2.t = t2, t1
     s1, s2
 end
 

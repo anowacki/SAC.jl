@@ -15,4 +15,11 @@ using SAC
         @test s′[:cmpinc] ≈ 150
         @test flip(s) == flip_component(s)
     end
+
+    # Trace swapping
+    let s1 = SACtr(rand(3), 1), s2 = SACtr(rand(3), 1), s1′ = deepcopy(s1), s2′ = deepcopy(s2)
+        SAC.swap_traces!(s1, s2)
+        @test s1′ == s2
+        @test s2′ == s1
+    end
 end
