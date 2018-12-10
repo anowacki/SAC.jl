@@ -1,7 +1,7 @@
 name = "SAC"
 uuid = "03de775e-c638-11e8-38ea-6915ef5cdf5f"
 authors = ["Andy Nowacki <a.nowacki@leeds.ac.uk>"]
-version = "0.3.0"
+version = "0.3.2"
 
 [deps]
 AbstractFFTs = "621f4979-c628-5d54-868e-fcf4e3e8185c"
