@@ -53,9 +53,9 @@ function read_cut(file, hb::Symbol, b::Real, he::Symbol, e::Real; swap=true, ter
         isundefined(s, hb) && error("Header $hb is undefined")
         isundefined(s, he) && error("Header $he is undefined")
         b < s.b && !terse &&
-            warn("Start cut $b is before trace start $(s.b); reading from trace start")
+            @warn("Start cut $b is before trace start $(s.b); reading from trace start")
         e > s.e && !terse &&
-            warn("End cut $e is after trace end $(s.e); reading to trace end")
+            @warn("End cut $e is after trace end $(s.e); reading to trace end")
         # Now do cutting
         ib = round(Int, (b - getfield(s, hb))/s.delta) + 1
         ie = round(Int, (e - getfield(s, he))/s.delta) + 1
