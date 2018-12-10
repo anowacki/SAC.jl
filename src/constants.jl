@@ -19,10 +19,6 @@ const saccharlen = 8
 const sac_ver_num = SACInt(6)
 # Whether this machine is big- or little endian.  SAC files are meant to be big-endian,
 # so this determines whether a file is 'native-endian' or not.
-# TODO: Remove when we drop v0.6 support
-if VERSION < v"0.7-"
-    const bitstring = bits
-end
 const machine_is_little_endian = bitstring(1)[end] == '1'
 
 # Convert a number into a SACChar
