@@ -34,6 +34,17 @@ using SAC
             end
         end
 
+        # Test for npts matching file length
+        let s = SAC.sample()
+            write(s, tempfile)
+            data = read(tempfile)
+            write(tempfile, data[1:end-4]) # Remove last data point
+            @test_throws ErrorException SAC.read(tempfile)
+            s′ = SAC.read(tempfile, check_npts=false)
+            s.t = s.t[1:end-1] # Remove last datum
+            @test s.t == s′.t
+        end
+
         let s = SAC.sample()
             s.kevnm = SAC.sac_cnull
             write(s, tempfile)

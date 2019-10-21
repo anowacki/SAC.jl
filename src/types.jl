@@ -119,7 +119,7 @@ function SACtr(data::Vector{UInt8}, file=""; swap::Bool=true, terse::Bool=false,
     @assert off == sac_header_len
     check_npts && npts_in_file < trace.npts &&
         error("Number of points is not as expected: have $npts_in_file versus npts = " *
-            "$npts in header" * (file!="" ? " for file '$file'." : "."))
+            "$(trace.npts) in header" * (file!="" ? " for file '$file'." : "."))
 
     # Now read in the trace
     trace.t .= reinterpret(SACFloat, data[(sac_header_len+1):end])
