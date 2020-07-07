@@ -4,6 +4,19 @@
 [![Build status](https://img.shields.io/appveyor/ci/AndyNowacki/sac-jl.svg?style=flat-square&label=windows)](https://ci.appveyor.com/project/AndyNowacki/sac-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/anowacki/SAC.jl/badge.svg?branch=master)](https://coveralls.io/github/anowacki/SAC.jl?branch=master)
 
+## Status
+
+SAC.jl is now **deprecated** in favour of
+[Seis.jl](https://github.com/anowacki/Seis.jl), and no new features will
+be added to this package.
+
+All SAC.jl functionality exists in Seis.jl, which also includes much
+better [documentation](https://anowacki.github.io/Seis.jl/stable/)
+and more IO options, and integrates with the wider Seis.jl
+ecosystem (including [SeisSplit](https://github.com/anowacki/SeisSplit.jl),
+[SeisTau](https://github.com/anowacki/SeisTau.jl) and
+[Beamforming](https://github.com/anowacki/Beamforming.jl)).
+
 ## What is SAC.jl?
 A [Julia](http://julialang.org) package for dealing with seismic data in the
 [SAC](http://ds.iris.edu/files/sac-manual/manual/file_format.html) format, and
